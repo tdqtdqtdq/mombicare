@@ -100,11 +100,40 @@ export default function Home() {
     { name: "Phạm Thúy Vy", service: "Lấy nhân mụn Y khoa", quote: "Lấy mụn không hề bị sưng tấy đỏ như những chỗ khác. Các bạn làm rất nhẹ nhàng, phòng ốc lại thơm tho, nhạc thiền thư giãn vô cùng.", rating: 5 }
   ];
 
-  const cmsFacebookPosts = [
-    "https://www.facebook.com/mombicarespa/posts/pfbid022E4zP2mH4eXWbVjZ6bX2pE7Y2uB3Q9cWq9oA3B7C4K2pQ", 
-    "https://www.facebook.com/mombicarespa/posts/pfbid034E4zP2mH4eXWbVjZ6bX2pE7Y2uB3Q9cWq9oA3B7C4K2pQ", 
-    "https://www.facebook.com/mombicarespa/posts/pfbid055E4zP2mH4eXWbVjZ6bX2pE7Y2uB3Q9cWq9oA3B7C4K2pQ", 
-    "https://www.facebook.com/mombicarespa/posts/pfbid066E4zP2mH4eXWbVjZ6bX2pE7Y2uB3Q9cWq9oA3B7C4K2pQ", 
+  // ================= DỮ LIỆU BÀI VIẾT TỪ CMS =================
+  const cmsArticles = [
+    {
+      id: 1,
+      title: "Hành trình tìm về nhịp nghỉ vừa vặn giữa lòng buôn phố",
+      excerpt: "Đôi khi, tất cả những gì chúng ta cần sau một tuần làm việc mệt mỏi là một không gian yên tĩnh, thoảng hương thảo mộc để xoa dịu những căng thẳng...",
+      image: "/img/landing-1.jpg", // Cập nhật bằng field ảnh từ CMS
+      slug: "hanh-trinh-tim-ve-nhip-nghi",
+      date: "12/04/2026"
+    },
+    {
+      id: 2,
+      title: "Giải mã liệu trình gội đầu dưỡng sinh đánh bay mất ngủ",
+      excerpt: "Không chỉ đơn thuần là làm sạch tóc, gội đầu dưỡng sinh tại Mombi còn kết hợp các kỹ thuật ấn huyệt cổ vai gáy chuyên sâu giúp tăng cường tuần hoàn máu...",
+      image: "/img/landing-2.jpg",
+      slug: "giai-ma-lieu-trinh-goi-dau-duong-sinh",
+      date: "05/04/2026"
+    },
+    {
+      id: 3,
+      title: "Vì sao Cấy HA căng bóng lại được yêu thích đến vậy?",
+      excerpt: "Bước qua tuổi 25, làn da bắt đầu thiếu hụt độ ẩm và collagen. Liệu trình cấy HA tại Mombi mang đến giải pháp cấp ẩm tức thì, trả lại vẻ căng mướt...",
+      image: "/img/landing-3.jpg",
+      slug: "vi-sao-cay-ha-cang-bong-duoc-yeu-thich",
+      date: "28/03/2026"
+    },
+    {
+      id: 4,
+      title: "5 Bí quyết duy trì làn da khỏe mạnh sau lấy nhân mụn",
+      excerpt: "Sau khi lấy nhân mụn chuẩn y khoa, việc chăm sóc tại nhà quyết định đến 80% khả năng phục hồi và không để lại thâm sẹo. Dưới đây là những lưu ý quan trọng...",
+      image: "/img/lay-nhan-mun.jpg",
+      slug: "5-bi-quyet-duy-tri-lan-da-khoe-manh",
+      date: "20/03/2026"
+    }
   ];
 
   const features = [
@@ -401,7 +430,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ================= 5. CHUYỆN NHÀ MOMBI ================= */}
+     {/* ================= 5. CHUYỆN NHÀ MOMBI ================= */}
       <section id="chuyen-nha" className="relative py-12 md:py-16 px-4 md:px-12 lg:px-24 bg-[#edf4e6] text-center overflow-hidden">
         <div className="absolute bottom-[-10%] left-[20%] w-80 h-80 bg-white rounded-full mix-blend-overlay filter blur-3xl opacity-40 animate-blob animation-delay-4000"></div>
         <div className="relative z-10">
@@ -416,23 +445,33 @@ export default function Home() {
           </button>
 
           <div ref={storiesRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-6 w-full no-scrollbar px-2">
-            {cmsFacebookPosts.map((postUrl, index) => (
-              <div key={index} className="snap-center shrink-0 w-[280px] md:w-[320px]">
+            {cmsArticles.map((article, index) => (
+              <div key={index} className="snap-center shrink-0 w-[280px] md:w-[350px]">
                 <ScrollAnimation delay={index * 0.1}>
-                  {/* Chiều cao iframe rút gọn lại thành 400px */}
-                  <div className="w-full bg-white rounded-2xl shadow-sm hover:shadow-xl hover:shadow-[#8bb96e]/20 transition-all border border-[#e4edd9] overflow-hidden h-[400px] flex items-center justify-center">
-                    {postUrl.includes("facebook.com") ? (
-                      <iframe
-                        src={`https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(postUrl)}&show_text=true&width=320`}
-                        width="320"
-                        height="400"
-                        style={{ border: "none", overflow: "hidden" }}
-                        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                      ></iframe>
-                    ) : (
-                      <p className="text-sm text-[#5c6e51] italic px-4">Đang tải bài viết...</p>
-                    )}
-                  </div>
+                  {/* Link dẫn đến trang chi tiết bài viết */}
+                  <Link href={`/chuyen-nha/${article.slug}`}>
+                    <div className="bg-white rounded-3xl shadow-sm hover:shadow-xl hover:shadow-[#8bb96e]/20 transition-all duration-300 border border-[#e4edd9] overflow-hidden flex flex-col h-[420px] group/article text-left cursor-pointer">
+                      
+                      {/* Thumbnail ảnh bài viết */}
+                      <div className="relative w-full h-[200px] overflow-hidden bg-[#f6f9f2]">
+                        <Image src={article.image} alt={article.title} fill className="object-cover group-hover/article:scale-105 transition-transform duration-700 ease-in-out" />
+                      </div>
+                      
+                      {/* Nội dung Text */}
+                      <div className="p-6 flex flex-col flex-1">
+                        <span className="text-[#8bb96e] text-[10px] uppercase tracking-widest font-medium mb-3">{article.date}</span>
+                        <h4 className={`text-[17px] text-[#2d3d25] mb-2 leading-snug line-clamp-2 ${playfair.className} group-hover/article:text-[#8bb96e] transition-colors`}>{article.title}</h4>
+                        <p className="text-[#5c6e51] text-xs font-light leading-relaxed line-clamp-3 mb-4 flex-1">{article.excerpt}</p>
+                        
+                        {/* Nút Đọc tiếp */}
+                        <div className="mt-auto flex items-center text-[#8bb96e] text-xs font-medium tracking-wide group-hover/article:translate-x-1 transition-transform">
+                          Đọc bài viết
+                          <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </div>
+                      </div>
+
+                    </div>
+                  </Link>
                 </ScrollAnimation>
               </div>
             ))}
@@ -445,11 +484,12 @@ export default function Home() {
 
         <div className="relative z-10 mt-6">
           <ScrollAnimation delay={0.3}>
-            <a href="https://www.facebook.com/mombicarespa" target="_blank" rel="noopener noreferrer">
+            {/* Đổi link để trỏ về trang danh sách Blog/Article thay vì Fanpage */}
+            <Link href="/chuyen-nha">
               <button className="bg-[#8bb96e] text-white rounded-full px-8 md:px-10 py-3 text-xs md:text-sm tracking-widest hover:bg-[#739f55] transition-all shadow-md">
-                XEM THÊM TRÊN FANPAGE
+                XEM TẤT CẢ BÀI VIẾT
               </button>
-            </a>
+            </Link>
           </ScrollAnimation>
         </div>
       </section>
