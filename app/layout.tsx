@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Mombi Care Spa - Trải nghiệm thư giãn tuyệt đối",
     description: "Đến Mombi Care Spa, tìm về một nhịp nghỉ vừa vặn giữa lòng Sài Gòn.",
-    url: "https://mombicare.vn",
+    //url: "https://mombicare.vn",
     siteName: "Mombi Care Spa",
     images: [
       {
