@@ -577,7 +577,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* ================= POPUP ================= */}
+      {/* ================= POPUP ================= *
       {showPopup && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm transition-opacity duration-300">
           <div className="bg-white rounded-3xl w-full max-w-md p-8 relative shadow-2xl flex flex-col text-center animate-bounce-in">
