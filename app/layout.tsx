@@ -5,13 +5,15 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://mombicarespa.com'), // BẮT BUỘC THÊM DÒNG NÀY
+  
   title: "Mombi Care Spa | Tìm Về Một Nhịp Nghỉ Vừa Vặn",
   description: "Trải nghiệm dịch vụ spa, massage thư giãn, chăm sóc da và Onsen tại trung tâm Buôn Ma Thuột. Không gian yên tĩnh, kỹ thuật viên lành nghề.",
   keywords: "Mombi Care Spa, massage thư giãn, spa Buôn Ma Thuột, onsen Buôn Ma Thuột, chăm sóc da",
   openGraph: {
     title: "Mombi Care Spa - Trải nghiệm thư giãn tuyệt đối",
     description: "Đến Mombi Care Spa, tìm về một nhịp nghỉ vừa vặn giữa lòng Sài Gòn.",
-    //url: "https://mombicare.vn",
+    url: "https://mombicarespa.com",
     siteName: "Mombi Care Spa",
     images: [
       {
