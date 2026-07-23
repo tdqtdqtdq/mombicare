@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   keywords: "Mombi Care Spa, massage thư giãn, spa Buôn Ma Thuột, onsen Buôn Ma Thuột, chăm sóc da",
   openGraph: {
     title: "Mombi Care Spa - Trải nghiệm thư giãn tuyệt đối",
-    description: "Đến Mombi Care Spa, tìm về một nhịp nghỉ vừa vặn giữa lòng Sài Gòn.",
+    description: "Đến Mombi Care Spa, tìm về một nhịp nghỉ vừa vặn giữa lòng Buôn Ma Thuột.",
     url: "https://mombicarespa.com",
     siteName: "Mombi Care Spa",
     images: [
