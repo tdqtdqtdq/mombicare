@@ -1,21 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import type { RefObject } from "react";
+import {useState} from "react";
 import Image from "next/image";
 import Link from "next/link";
-import ScrollAnimation from "./ScrollAnimation"; // Đã sửa lại đường dẫn cho đúng thư mục components
-import { Playfair_Display, Be_Vietnam_Pro } from "next/font/google";
-
-const playfair = Playfair_Display({ 
-  subsets: ["vietnamese"], 
-  weight: ["400", "500", "600", "700"] 
-});
-
-const beVietnam = Be_Vietnam_Pro({ 
-  subsets: ["vietnamese"], 
-  weight: ["300", "400", "500", "600"] 
-});
+import {SiteFooter} from "./SiteChrome";
 
 type HomeArticle = {
   _id: string;
@@ -26,98 +14,96 @@ type HomeArticle = {
   date: string;
 };
 
-// NHẬN DỮ LIỆU TỪ SANITY THÔNG QUA PROPS
-export default function HomeClient({ cmsArticles }: { cmsArticles: HomeArticle[] }) {
-  // ================= STATES & REFS =================
+const serviceCategories = [
+  {
+    number: "01",
+    title: "Chăm sóc da",
+    subtitle: "Nuôi dưỡng & phục hồi",
+    description: "Lắng nghe làn da trước khi lựa chọn các bước làm sạch, chăm sóc và phục hồi phù hợp.",
+    image: "/img/skin-care.jpg",
+    href: "/dich-vu/cham-soc-da",
+    highlights: ["Cấy HA căng bóng", "Chăm sóc chuyên sâu", "Lấy nhân mụn"],
+  },
+  {
+    number: "02",
+    title: "Massage thư giãn",
+    subtitle: "Thả lỏng & cân bằng",
+    description: "Những liệu trình được điều chỉnh vừa lực để cơ thể chậm lại và tìm về trạng thái dễ chịu.",
+    image: "/img/massage body mombi care spa.jpg",
+    href: "/dich-vu/massage-thu-gian",
+    highlights: ["Gội đầu dưỡng sinh", "Massage cổ vai gáy", "Massage body"],
+  },
+];
+
+const testimonials = [
+  {
+    name: "Trần Mai Anh",
+    service: "Gội đầu dưỡng sinh",
+    quote: "Không gian rất yên tĩnh, kỹ thuật viên chăm sóc vừa lực và chu đáo. Mình có cảm giác được nghỉ thật sự sau một tuần bận rộn.",
+  },
+  {
+    name: "Nguyễn Hà My",
+    service: "Chăm sóc da",
+    quote: "Mombi tư vấn nhẹ nhàng, không tạo áp lực mua thêm liệu trình. Các bước chăm sóc kỹ, dụng cụ sạch và làn da dễ chịu hơn sau buổi làm.",
+  },
+  {
+    name: "Lê Hoàng Ngọc",
+    service: "Massage body",
+    quote: "Mình thích nhất mùi hương dịu và không gian riêng tư. Sau liệu trình cơ thể nhẹ hơn, phần vai gáy cũng được thả lỏng rõ rệt.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Mombi có chỗ đậu ô tô và xe máy không?",
+    answer: "Có. Mombi có khu vực đậu xe thuận tiện ngay phía trước spa để bạn an tâm tận hưởng trọn vẹn thời gian nghỉ ngơi.",
+  },
+  {
+    question: "Giá dịch vụ đã bao gồm tiền tip chưa?",
+    answer: "Mức giá trên bảng dịch vụ là chi phí của liệu trình. Khách hàng không bắt buộc tip và Mombi luôn xác nhận dịch vụ trước khi bắt đầu.",
+  },
+  {
+    question: "Mombi có phục vụ khách nam không?",
+    answer: "Có. Mombi chào đón cả khách nam và nữ, đồng thời chuẩn bị không gian phù hợp để đảm bảo sự riêng tư và thoải mái.",
+  },
+  {
+    question: "Nên đặt lịch trước bao lâu?",
+    answer: "Bạn nên nhắn Mombi trước khoảng 2 giờ để spa có thể chuẩn bị phòng và sắp xếp kỹ thuật viên phù hợp với nhu cầu của bạn.",
+  },
+];
+
+const ArrowIcon = () => (
+  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none">
+    <path d="M3 9h11M10 5l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export default function HomeClient({cmsArticles}: {cmsArticles: HomeArticle[]}) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileServicesOpen, setIsMobileServicesOpen] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-
-  const [showPopup, setShowPopup] = useState(false);
-  const [hasClosedPopup, setHasClosedPopup] = useState(false);
-
-  const testimonialsRef = useRef<HTMLDivElement>(null);
-  const storiesRef = useRef<HTMLDivElement>(null);
-
-  const scrollLeft = (ref: RefObject<HTMLDivElement | null>) => {
-    if (ref.current) ref.current.scrollBy({ left: -350, behavior: 'smooth' });
-  };
-  const scrollRight = (ref: RefObject<HTMLDivElement | null>) => {
-    if (ref.current) ref.current.scrollBy({ left: 350, behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    const popupTimer = setTimeout(() => {
-      if (!hasClosedPopup) setShowPopup(true);
-    }, 10000);
-
-    const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 0 && !hasClosedPopup) setShowPopup(true);
-    };
-    document.addEventListener("mouseleave", handleMouseLeave);
-
-    return () => {
-      clearTimeout(popupTimer);
-      document.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, [hasClosedPopup]);
-
-  const signatureServices = [
-    { name: "Gội đầu dưỡng sinh", time: "70 phút", image: "/img/goi-dau.jpg", href: "/dich-vu/massage-thu-gian", desc: "Làm sạch sâu kết hợp massage ấn huyệt vùng đầu, cổ vai gáy, đả thông kinh lạc, mang lại giấc ngủ ngon." },
-    { name: "Massage vai cổ gáy trị liệu", time: "45 phút", image: "/img/co-vai-gay-tri-lieu.jpg", href: "/dich-vu/massage-thu-gian", desc: "Trị liệu chuyên sâu, gỡ các điểm bó cơ, giảm nhanh tình trạng căng cơ, đau nhức hiệu quả." },
-    { name: "Cấy HA căng bóng da", time: "90 phút", image: "/img/cay-ha.jpg", href: "/dich-vu/cham-soc-da", desc: "Cung cấp độ ẩm sâu, giúp làn da căng bóng, mịn màng và giảm thiểu nếp nhăn, mang lại vẻ tươi trẻ." },
-    { name: "Lấy nhân mụn chuẩn Y khoa", time: "60 phút", image: "/img/lay-nhan-mun.jpg", href: "/dich-vu/cham-soc-da", desc: "Xử lý các nhân mụn chuẩn y khoa, dụng cụ tiệt trùng 100%, an toàn, hạn chế tối đa để lại thâm sẹo." },
-  ];
-
-  const testimonials = [
-    { name: "Trần Mai Anh", service: "Gội đầu dưỡng sinh", quote: "Không gian yên tĩnh đến mức mình đã ngủ quên lúc nào không hay. Các bạn kỹ thuật viên massage gáy rất vừa lực. Chắc chắn sẽ ghé lại Mombi mỗi cuối tuần.", rating: 5 },
-    { name: "Nguyễn Hà My", service: "Chăm sóc da chuyên sâu", quote: "Lần đầu tiên đi Spa mà không bị chèo kéo mua gói liệu trình. Da mình sau khi cấy HA căng bóng lên hẳn, quy trình làm rất kỹ và dụng cụ sạch sẽ.", rating: 5 },
-    { name: "Lê Hoàng Ngọc", service: "Massage Body Trị Liệu", quote: "Mình làm văn phòng nên vai gáy lúc nào cũng mỏi nhừ. Đến Mombi làm gói trị liệu 90 phút xong thấy người nhẹ bẫng. Rất ưng ý mùi hương tinh dầu.", rating: 5 },
-    { name: "Phạm Thúy Vy", service: "Lấy nhân mụn Y khoa", quote: "Lấy mụn không hề bị sưng tấy đỏ như những chỗ khác. Các bạn làm rất nhẹ nhàng, phòng ốc lại thơm tho, nhạc thiền thư giãn vô cùng.", rating: 5 }
-  ];
-
-  const features = [
-    { name: 'KHÔNG GIAN', svg: "M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" },
-    { name: 'HƯƠNG THƠM', svg: "M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" },
-    { name: 'ÂM NHẠC', svg: "M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" },
-    { name: 'TRÀ & BÁNH', svg: "M15 13V5H5v8a5 5 0 0010 0zM5 5h10M15 7h2a2 2 0 012 2v0a2 2 0 01-2 2h-2" },
-    { name: 'SỰ TRỌN VẸN', svg: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" }
-  ];
-
-  const faqs = [
-    { q: "Spa có chỗ đậu xe ô tô không?", a: "Dạ có ạ. Mombi Care Spa có khuôn viên đỗ xe ô tô rộng rãi, an toàn và hoàn toàn miễn phí ngay trước cửa Spa cho khách hàng yên tâm thư giãn." },
-    { q: "Giá dịch vụ đã bao gồm tiền Tip chưa?", a: "Tuyệt đối không có chi phí ẩn. Mọi giá dịch vụ tại bảng giá Mombi đã bao gồm 100% chi phí. Khách hàng đến thư giãn không bắt buộc và không cần bận tâm thêm về tiền tip." },
-    { q: "Mombi có nhận khách Nam không?", a: "Mombi hoan nghênh cả khách Nam và Nữ. Chúng tôi có các phòng trị liệu riêng biệt để đảm bảo sự thoải mái, lịch sự và riêng tư tối đa cho mọi khách hàng." },
-    { q: "Nên đặt lịch trước bao lâu?", a: "Để Mombi có thể chuẩn bị phòng ốc thảo mộc và kỹ thuật viên chu đáo nhất, quý khách nên đặt lịch trước ít nhất 2 tiếng qua Zalo hoặc số Hotline nhé." }
-  ];
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   return (
-    <main className={`min-h-screen relative text-[#2d3d25] ${beVietnam.className}`}>
-      
+    <main className="min-h-screen overflow-hidden bg-[#f8f7f2] text-[#26351f]">
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
         @keyframes heroReveal { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes heroZoom { from { transform: scale(1.04); } to { transform: scale(1); } }
-        .animate-blob { animation: blob 10s infinite alternate; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animation-delay-4000 { animation-delay: 4s; }
         .hero-reveal { animation: heroReveal .9s cubic-bezier(.2,.75,.25,1) both; }
         .hero-reveal-delay { animation: heroReveal .9s .18s cubic-bezier(.2,.75,.25,1) both; }
         .hero-reveal-late { animation: heroReveal .9s .34s cubic-bezier(.2,.75,.25,1) both; }
         .hero-image { animation: heroZoom 14s cubic-bezier(.2,.7,.2,1) both; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
         @media (prefers-reduced-motion: reduce) { .hero-reveal, .hero-reveal-delay, .hero-reveal-late, .hero-image { animation: none; } }
       `}} />
 
       <section className="relative flex min-h-[820px] w-full items-center overflow-hidden bg-[#1d2b1a] text-white md:h-[100svh] md:max-h-[980px] md:min-h-[760px]">
-        <div className="absolute inset-0 pointer-events-none">
+        <div className="pointer-events-none absolute inset-0">
           <Image src="/img/landing-1.jpg" alt="Không gian xanh và sự chăm sóc tận tâm tại Mombi Care Spa" fill priority sizes="100vw" className="hero-image object-cover object-[52%_63%] md:object-[center_62%]" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#142014]/95 via-[#1b2919]/68 to-[#172115]/12" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#10190f]/90 via-transparent to-[#10190f]/35" />
-          <div className="absolute inset-0 opacity-[0.16]" style={{backgroundImage: 'radial-gradient(circle at 72% 38%, rgba(223,244,206,.9) 0, transparent 31%)'}} />
+          <div className="absolute inset-0 opacity-[0.16]" style={{backgroundImage: "radial-gradient(circle at 72% 38%, rgba(223,244,206,.9) 0, transparent 31%)"}} />
         </div>
-        
+
         <header className="absolute inset-x-0 top-0 z-50 border-b border-white/15">
           <div className="mx-auto flex h-[82px] max-w-[1380px] items-center justify-between px-5 md:h-[96px] md:px-10">
             <Link href="/" className="flex items-center gap-3" aria-label="Mombi Care Spa - Trang chủ">
@@ -126,48 +112,48 @@ export default function HomeClient({ cmsArticles }: { cmsArticles: HomeArticle[]
               </span>
               <span className="hidden text-[10px] font-semibold uppercase leading-4 tracking-[0.22em] text-white/85 sm:block">Mombi Care<br />Spa</span>
             </Link>
-          
-            <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.16em] lg:flex">
-            <Link href="/" className="text-[#c7e4b3]">Trang chủ</Link>
-            <div className="relative py-2" onMouseEnter={() => setIsDropdownOpen(true)} onMouseLeave={() => setIsDropdownOpen(false)}>
-              <Link href="/dich-vu" className={`transition-colors ${isDropdownOpen ? 'text-[#c7e4b3]' : 'hover:text-[#c7e4b3]'}`}>Dịch vụ</Link>
-              <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 w-56 transition-all duration-300 z-50 ${isDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
-                <div className="flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#f9faf7] py-2 text-[#526348] shadow-2xl">
-                  <Link href="/dich-vu/cham-soc-da" className="px-6 py-3 text-left text-[10px] tracking-widest hover:text-[#8bb96e] hover:bg-[#f6f9f2] transition-colors">CHĂM SÓC DA CAO CẤP</Link>
-                  <Link href="/dich-vu/massage-thu-gian" className="px-6 py-3 text-left text-[10px] tracking-widest hover:text-[#8bb96e] hover:bg-[#f6f9f2] transition-colors">THƯ GIÃN & MASSAGE</Link>
+
+            <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.16em] lg:flex" aria-label="Điều hướng chính">
+              <Link href="/" className="text-[#c7e4b3]">Trang chủ</Link>
+              <div className="relative py-2" onMouseEnter={() => setIsDropdownOpen(true)} onMouseLeave={() => setIsDropdownOpen(false)}>
+                <Link href="/dich-vu" className={`transition-colors ${isDropdownOpen ? "text-[#c7e4b3]" : "hover:text-[#c7e4b3]"}`}>Dịch vụ</Link>
+                <div className={`absolute left-1/2 top-full z-50 w-60 -translate-x-1/2 pt-3 transition-all duration-300 ${isDropdownOpen ? "visible translate-y-0 opacity-100" : "invisible -translate-y-2 opacity-0"}`}>
+                  <div className="flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#f9faf7] py-2 text-[#526348] shadow-2xl">
+                    <Link href="/dich-vu/cham-soc-da" className="px-6 py-3 text-left text-[10px] tracking-widest transition hover:bg-[#f1f5ed] hover:text-[#729557]">CHĂM SÓC DA</Link>
+                    <Link href="/dich-vu/massage-thu-gian" className="px-6 py-3 text-left text-[10px] tracking-widest transition hover:bg-[#f1f5ed] hover:text-[#729557]">MASSAGE THƯ GIÃN</Link>
+                  </div>
                 </div>
               </div>
-            </div>
-            <Link href="#ve-mombi" className="transition-colors hover:text-[#c7e4b3]">Về Mombi</Link>
-            <Link href="#chuyen-nha" className="transition-colors hover:text-[#c7e4b3]">Chuyện nhà Mombi</Link>
-            <Link href="/phieu-qua-tang" className="transition-colors hover:text-[#c7e4b3]">Phiếu quà tặng</Link>
-          </nav>
+              <Link href="#ve-mombi" className="transition-colors hover:text-[#c7e4b3]">Về Mombi</Link>
+              <Link href="#chuyen-nha" className="transition-colors hover:text-[#c7e4b3]">Chuyện nhà Mombi</Link>
+              <Link href="#lien-he" className="transition-colors hover:text-[#c7e4b3]">Liên hệ</Link>
+            </nav>
 
             <div className="flex items-center gap-3">
               <a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="hidden rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] backdrop-blur-md transition hover:bg-white hover:text-[#24341f] sm:inline-flex">Đặt lịch</a>
-              <button className="rounded-full border border-white/20 bg-white/10 p-2.5 text-white backdrop-blur-md transition hover:bg-white/20 lg:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label={isMobileMenuOpen ? 'Đóng menu' : 'Mở menu'}>
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{isMobileMenuOpen ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M4 6h16M4 12h16M4 18h16" />}</svg>
+              <button className="rounded-full border border-white/20 bg-white/10 p-2.5 text-white backdrop-blur-md transition hover:bg-white/20 lg:hidden" onClick={() => setIsMobileMenuOpen((value) => !value)} aria-label={isMobileMenuOpen ? "Đóng menu" : "Mở menu"}>
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{isMobileMenuOpen ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M4 6h16M4 12h16M4 18h16" />}</svg>
               </button>
             </div>
           </div>
         </header>
 
-        <div className={`lg:hidden absolute top-[82px] md:top-[96px] left-0 w-full bg-white border-b border-[#e4edd9] shadow-2xl transition-all duration-300 ease-in-out z-40 overflow-hidden ${isMobileMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
-          <nav className="flex flex-col py-4 px-6 text-xs uppercase tracking-widest text-[#5c6e51]">
-            <Link href="/" className="py-4 border-b border-[#f6f9f2] hover:text-[#8bb96e]" onClick={() => setIsMobileMenuOpen(false)}>Trang chủ</Link>
-            <div className="flex flex-col border-b border-[#f6f9f2]">
-              <button className="py-4 flex justify-between items-center hover:text-[#8bb96e] text-left uppercase" onClick={() => setIsMobileServicesOpen(!isMobileServicesOpen)}>
+        <div className={`absolute left-0 top-[82px] z-40 w-full overflow-hidden border-b border-[#e4edd9] bg-white shadow-2xl transition-all duration-300 md:top-[96px] lg:hidden ${isMobileMenuOpen ? "max-h-[520px] opacity-100" : "max-h-0 opacity-0"}`}>
+          <nav className="flex flex-col px-6 py-4 text-xs uppercase tracking-widest text-[#5c6e51]">
+            <Link href="/" className="border-b border-[#edf2e9] py-4" onClick={() => setIsMobileMenuOpen(false)}>Trang chủ</Link>
+            <div className="flex flex-col border-b border-[#edf2e9]">
+              <button className="flex items-center justify-between py-4 text-left uppercase" onClick={() => setIsMobileServicesOpen((value) => !value)}>
                 Dịch vụ
-                <svg className={`w-4 h-4 transform transition-transform ${isMobileServicesOpen ? 'rotate-180 text-[#8bb96e]' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                <svg className={`h-4 w-4 transition-transform ${isMobileServicesOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
               </button>
-              <div className={`flex flex-col pl-4 border-l-2 border-[#8bb96e]/30 ml-2 overflow-hidden transition-all duration-300 ${isMobileServicesOpen ? 'max-h-40 mb-4' : 'max-h-0'}`}>
-                <Link href="/dich-vu/cham-soc-da" className="py-3 hover:text-[#8bb96e]" onClick={() => setIsMobileMenuOpen(false)}>Chăm sóc da cao cấp</Link>
-                <Link href="/dich-vu/massage-thu-gian" className="py-3 hover:text-[#8bb96e]" onClick={() => setIsMobileMenuOpen(false)}>Thư giãn & Massage</Link>
+              <div className={`ml-2 flex flex-col overflow-hidden border-l-2 border-[#8bb96e]/30 pl-4 transition-all ${isMobileServicesOpen ? "mb-4 max-h-40" : "max-h-0"}`}>
+                <Link href="/dich-vu/cham-soc-da" className="py-3" onClick={() => setIsMobileMenuOpen(false)}>Chăm sóc da</Link>
+                <Link href="/dich-vu/massage-thu-gian" className="py-3" onClick={() => setIsMobileMenuOpen(false)}>Massage thư giãn</Link>
               </div>
             </div>
-            <Link href="#ve-mombi" className="py-4 border-b border-[#f6f9f2] hover:text-[#8bb96e]" onClick={() => setIsMobileMenuOpen(false)}>Về Mombi Care Spa</Link>
-            <Link href="#chuyen-nha" className="py-4 border-b border-[#f6f9f2] hover:text-[#8bb96e]" onClick={() => setIsMobileMenuOpen(false)}>Chuyện nhà Mombi</Link>
-            <Link href="/phieu-qua-tang" className="py-4 hover:text-[#8bb96e]" onClick={() => setIsMobileMenuOpen(false)}>Phiếu quà tặng</Link>
+            <Link href="#ve-mombi" className="border-b border-[#edf2e9] py-4" onClick={() => setIsMobileMenuOpen(false)}>Về Mombi</Link>
+            <Link href="#chuyen-nha" className="border-b border-[#edf2e9] py-4" onClick={() => setIsMobileMenuOpen(false)}>Chuyện nhà Mombi</Link>
+            <Link href="#lien-he" className="py-4" onClick={() => setIsMobileMenuOpen(false)}>Liên hệ</Link>
           </nav>
         </div>
 
@@ -177,17 +163,17 @@ export default function HomeClient({ cmsArticles }: { cmsArticles: HomeArticle[]
               <span className="h-px w-10 bg-[#b9dba3]" />
               <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#c7e4b3] md:text-[11px]">Spa thư giãn tại Buôn Ma Thuột</p>
             </div>
-            <h1 className={`hero-reveal-delay text-[3.35rem] font-normal leading-[0.98] tracking-[-0.035em] drop-shadow-lg sm:hidden ${playfair.className}`}>
+            <h1 className="hero-reveal-delay font-serif text-[3.35rem] font-normal leading-[0.98] tracking-[-0.035em] drop-shadow-lg sm:hidden">
               Đến Mombi,<br />tìm về một<br />nhịp nghỉ <span className="italic text-[#c9e7b4]">vừa vặn.</span>
             </h1>
-            <h1 className={`hero-reveal-delay hidden max-w-4xl font-normal leading-[0.98] tracking-[-0.035em] drop-shadow-lg sm:block sm:text-6xl md:text-7xl lg:text-[5.5rem] ${playfair.className}`}>
+            <h1 className="hero-reveal-delay hidden max-w-4xl font-serif font-normal leading-[0.98] tracking-[-0.035em] drop-shadow-lg sm:block sm:text-6xl md:text-7xl lg:text-[5.5rem]">
               Đến Mombi, tìm về<br />một nhịp nghỉ <span className="italic text-[#c9e7b4]">vừa vặn.</span>
             </h1>
             <div className="hero-reveal-late mt-7 max-w-xl border-l border-white/35 pl-5 md:mt-9">
               <p className="text-sm font-light leading-7 text-white/82 md:text-base md:leading-8">Một không gian xanh giữa lòng thành phố, nơi cơ thể được thả lỏng và làn da được chăm sóc bằng sự tận tâm — cả ngày lẫn đêm.</p>
             </div>
             <div className="hero-reveal-late mt-8 flex flex-col gap-3 sm:flex-row md:mt-10">
-              <a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 rounded-full bg-[#91bd72] px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#172313] shadow-[0_14px_40px_rgba(112,160,78,.3)] transition hover:-translate-y-0.5 hover:bg-[#a7d386]">Đặt lịch với Mombi <span aria-hidden="true">→</span></a>
+              <a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 rounded-full bg-[#91bd72] px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#172313] shadow-[0_14px_40px_rgba(112,160,78,.3)] transition hover:-translate-y-0.5 hover:bg-[#a7d386]">Đặt lịch với Mombi <ArrowIcon /></a>
               <Link href="/dich-vu" className="inline-flex items-center justify-center rounded-full border border-white/35 bg-white/5 px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-sm transition hover:bg-white hover:text-[#24341f]">Khám phá dịch vụ</Link>
             </div>
           </div>
@@ -195,343 +181,206 @@ export default function HomeClient({ cmsArticles }: { cmsArticles: HomeArticle[]
 
         <div className="absolute inset-x-0 bottom-0 z-30 border-t border-white/15 bg-[#142013]/50 backdrop-blur-md">
           <div className="mx-auto grid max-w-[1380px] grid-cols-2 divide-x divide-white/15 px-5 md:grid-cols-[1fr_1fr_1fr_auto] md:px-10">
-            <div className="py-5 pr-4 md:py-6 md:pr-8">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#b9dba3]">Thời gian</p>
-              <p className="mt-1.5 text-xs text-white/90 md:text-sm">Phục vụ cả ngày & đêm</p>
-            </div>
-            <div className="py-5 pl-4 md:px-8 md:py-6">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#b9dba3]">Địa chỉ</p>
-              <p className="mt-1.5 text-xs text-white/90 md:text-sm">34 Trần Khánh Dư</p>
-            </div>
-            <div className="hidden px-8 py-6 md:block">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#b9dba3]">Trải nghiệm</p>
-              <p className="mt-1.5 text-sm text-white/90">Massage · Chăm sóc da</p>
-            </div>
+            <div className="py-5 pr-4 md:py-6 md:pr-8"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#b9dba3]">Thời gian</p><p className="mt-1.5 text-xs text-white/90 md:text-sm">Phục vụ cả ngày & đêm</p></div>
+            <div className="py-5 pl-4 md:px-8 md:py-6"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#b9dba3]">Địa chỉ</p><p className="mt-1.5 text-xs text-white/90 md:text-sm">34 Trần Khánh Dư</p></div>
+            <div className="hidden px-8 py-6 md:block"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#b9dba3]">Trải nghiệm</p><p className="mt-1.5 text-sm text-white/90">Massage · Chăm sóc da</p></div>
             <a href="tel:0934250909" className="hidden items-center gap-3 py-6 pl-8 text-sm font-medium text-white transition hover:text-[#c7e4b3] md:flex"><span className="grid h-9 w-9 place-items-center rounded-full border border-white/25">↗</span> 0934 250 909</a>
           </div>
         </div>
       </section>
 
-      <section className="py-12 md:py-16 px-4 md:px-12 lg:px-24 bg-[#f6f9f2] text-center">
-        <div className="relative z-10">
-          <ScrollAnimation>
-            <h3 className={`text-3xl md:text-4xl mb-3 text-[#2d3d25] ${playfair.className}`}>Dịch vụ Nổi bật</h3>
-            <p className="max-w-2xl mx-auto text-[#5c6e51] mb-8 md:mb-12 text-sm font-light">
-              Chắt lọc những tinh hoa trị liệu và chăm sóc da để mang lại cho bạn sự thư thái trọn vẹn nhất.
-            </p>
-          </ScrollAnimation>
-        </div>
-
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-10 text-left max-w-7xl mx-auto">
-          {signatureServices.map((service, index) => (
-            <div key={service.name} className="group bg-white shadow-sm hover:shadow-xl hover:shadow-[#8bb96e]/10 transition-all duration-300 rounded-2xl md:rounded-3xl overflow-hidden flex flex-col h-full border border-transparent hover:border-[#e4edd9]">
-              <ScrollAnimation delay={index * 0.1} >
-                <Link href={service.href} aria-label={`Xem dịch vụ ${service.name}`} className="block relative w-full h-[160px] md:h-[180px] overflow-hidden bg-[#e4edd9]">
-                  <Image src={service.image} alt={service.name} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
-                </Link>
-                <div className="p-5 md:p-6 flex flex-col flex-1">
-                  <p className="text-[10px] tracking-widest text-[#8bb96e] mb-2 uppercase font-medium">{service.time}</p>
-                  <Link href={service.href} className="hover:text-[#739f55] transition-colors"><h4 className={`text-lg mb-2 leading-snug ${playfair.className}`}>{service.name}</h4></Link>
-                  <p className="text-sm text-[#5c6e51] font-light leading-relaxed mb-5 flex-1">{service.desc}</p>
-                  <a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="block text-center border border-[#8bb96e] rounded-full text-[#8bb96e] px-4 py-2.5 text-[10px] uppercase tracking-widest hover:bg-[#8bb96e] hover:text-white transition-colors">Đặt lịch ngay</a>
-                </div>
-              </ScrollAnimation>
+      <section id="ve-mombi" className="px-5 py-20 md:px-8 md:py-32">
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-center lg:gap-20">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#759959]">Về Mombi Care</p>
+            <h2 className="mt-5 max-w-xl font-serif text-4xl leading-[1.1] tracking-[-0.025em] md:text-6xl">Chăm sóc không cần vội.</h2>
+            <p className="mt-7 max-w-xl text-sm font-light leading-7 text-[#607058] md:text-base md:leading-8">Mombi tin rằng một liệu trình tốt bắt đầu từ việc lắng nghe. Lắng nghe cơ thể, làn da và cả nhịp sống của bạn để mỗi lần ghé spa đều là một khoảng nghỉ vừa đủ.</p>
+            <div className="mt-10 grid gap-6 border-t border-[#dbe5d5] pt-8 sm:grid-cols-3">
+              {[['01', 'Lắng nghe'], ['02', 'Chăm sóc'], ['03', 'Thả lỏng']].map(([number, label]) => (
+                <div key={number}><span className="font-serif text-2xl text-[#8aab73]">{number}</span><p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#394b31]">{label}</p></div>
+              ))}
             </div>
-          ))}
-        </div>
-        
-        <div className="relative z-10">
-          <ScrollAnimation delay={0.4}>
-            <Link href="/dich-vu">
-              <button className="bg-[#8bb96e] text-white rounded-full px-8 md:px-10 py-3 md:py-3.5 text-xs md:text-sm tracking-widest hover:bg-[#739f55] transition-all shadow-md">XEM TOÀN BỘ BẢNG GIÁ</button>
-            </Link>
-          </ScrollAnimation>
+            <Link href="/dich-vu" className="mt-10 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.15em] text-[#66894e] transition hover:gap-4">Khám phá dịch vụ <ArrowIcon /></Link>
+          </div>
+
+          <div className="relative pb-10 pl-5 md:pb-14 md:pl-16">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] bg-[#dfe8d7] shadow-[0_30px_80px_rgba(39,57,31,.13)]">
+              <Image src="/img/ve-mombi1.jpg" alt="Không gian bên trong Mombi Care Spa" fill sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
+            </div>
+            <div className="absolute bottom-0 left-0 h-40 w-32 overflow-hidden rounded-2xl border-4 border-[#f8f7f2] bg-[#e5ebdf] shadow-xl md:h-56 md:w-44">
+              <Image src="/img/ve-mombi2.jpg" alt="Góc thư giãn tại Mombi Care Spa" fill sizes="176px" className="object-cover" />
+            </div>
+            <div className="absolute -right-3 top-7 rounded-2xl border border-[#dfe8d9] bg-white/90 px-5 py-4 shadow-lg backdrop-blur-md md:right-5">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#789b5e]">Một nhịp chậm</p>
+              <p className="mt-1 font-serif text-xl">giữa lòng phố</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section id="ve-mombi" className="py-12 md:py-16 px-4 md:px-12 lg:px-24 bg-white border-t border-[#e4edd9]">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          <div className="text-left relative z-10 order-2 lg:order-1">
-            <ScrollAnimation>
-              <h3 className={`text-3xl md:text-4xl mb-4 text-[#2d3d25] ${playfair.className}`}>Về Mombi Care Spa</h3>
-              <p className="text-[#5c6e51] mb-8 text-sm md:text-base leading-relaxed font-light">
-                Từ không gian cho đến dịch vụ ở Mombi đều được chăm chút và thực hiện tỉ mỉ qua đôi bàn tay của những kỹ thuật viên lành nghề. Mang đến cho bạn một trải nghiệm thư giãn tinh tế, đánh thức mọi giác quan qua hương thơm, âm nhạc và những liệu trình chăm sóc trọn vẹn nhất.
-              </p>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-5">
-                {features.map((feature, idx) => (
-                  <div key={idx} className="flex items-center gap-3 group cursor-pointer">
-                    <div className="w-10 h-10 rounded-full bg-[#f6f9f2] flex items-center justify-center text-[#8bb96e] group-hover:bg-[#8bb96e] group-hover:text-white transition-all duration-300 shadow-sm flex-shrink-0">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d={feature.svg} /></svg>
-                    </div>
-                    <span className="text-[10px] font-semibold tracking-widest text-[#5c6e51] group-hover:text-[#8bb96e] transition-colors leading-tight">{feature.name}</span>
+      <section className="border-y border-[#dfe7d9] bg-white px-5 py-20 md:px-8 md:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 grid gap-6 md:grid-cols-[1fr_0.65fr] md:items-end">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#759959]">Dịch vụ tại Mombi</p>
+              <h2 className="mt-5 font-serif text-4xl leading-tight tracking-[-0.025em] md:text-6xl">Chọn điều cơ thể<br className="hidden md:block" /> đang cần.</h2>
+            </div>
+            <p className="max-w-lg text-sm font-light leading-7 text-[#607058] md:text-base md:leading-8">Hai hành trình, cùng một mục tiêu: giúp bạn cảm thấy dễ chịu hơn khi rời Mombi.</p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {serviceCategories.map((service) => (
+              <article key={service.href} className="group overflow-hidden rounded-[2rem] border border-[#dfe7d9] bg-[#f9faf7] transition duration-500 hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(42,61,33,.12)]">
+                <Link href={service.href} className="relative block aspect-[4/3] overflow-hidden bg-[#dfe8d7]">
+                  <Image src={service.image} alt={`${service.title} tại Mombi Care Spa`} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover transition duration-700 group-hover:scale-[1.035]" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#152013]/65 via-transparent to-transparent" />
+                  <p className="absolute bottom-6 left-6 text-[10px] font-semibold uppercase tracking-[0.22em] text-white">{service.subtitle}</p>
+                </Link>
+                <div className="p-7 md:p-9">
+                  <div className="flex items-start justify-between gap-5">
+                    <div><p className="text-[10px] font-semibold tracking-[0.18em] text-[#91aa80]">{service.number}</p><h3 className="mt-2 font-serif text-3xl md:text-4xl">{service.title}</h3></div>
+                    <Link href={service.href} aria-label={`Xem ${service.title}`} className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#cbd9c2] text-[#67884f] transition group-hover:bg-[#789f5d] group-hover:text-white"><ArrowIcon /></Link>
                   </div>
+                  <p className="mt-5 text-sm font-light leading-7 text-[#65725e]">{service.description}</p>
+                  <ul className="mt-7 flex flex-wrap gap-2">
+                    {service.highlights.map((highlight) => <li key={highlight} className="rounded-full bg-[#edf3e8] px-4 py-2 text-xs text-[#516549]">{highlight}</li>)}
+                  </ul>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#23321e] px-5 py-20 text-white md:px-8 md:py-28">
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-20">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-[#33452b] md:aspect-[5/4] lg:aspect-[4/5]">
+            <Image src="/img/ve-mombi.jpg" alt="Sự tận tâm tại Mombi Care Spa" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover object-top" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#1b2817]/55 via-transparent to-transparent" />
+            <div className="absolute bottom-6 left-6 right-6 rounded-2xl border border-white/20 bg-[#1f2d1b]/55 px-5 py-4 backdrop-blur-md">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#bdd6ad]">Mombi Care Spa</p>
+              <p className="mt-1 text-sm text-white/85">34 Trần Khánh Dư, Buôn Ma Thuột</p>
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#b5d3a2]">Trải nghiệm Mombi</p>
+            <h2 className="mt-5 font-serif text-4xl leading-[1.1] tracking-[-0.025em] md:text-6xl">Sự thư giãn được tạo nên từ những điều nhỏ.</h2>
+            <p className="mt-7 max-w-xl text-sm font-light leading-7 text-white/70 md:text-base md:leading-8">Từ ánh sáng dịu, hương thơm vừa đủ đến cách kỹ thuật viên lắng nghe lực tay bạn mong muốn — mọi chi tiết đều được chuẩn bị để bạn có thể an tâm thả lỏng.</p>
+            <div className="mt-10 space-y-6">
+              {[
+                ['Không gian riêng tư', 'Nhẹ nhàng, sạch sẽ và đủ yên để bạn thật sự nghỉ ngơi.'],
+                ['Chăm sóc tận tâm', 'Tư vấn rõ ràng và điều chỉnh liệu trình theo nhu cầu thực tế.'],
+                ['Phục vụ ngày & đêm', 'Linh hoạt thời gian để một khoảng nghỉ luôn vừa với lịch của bạn.'],
+              ].map(([title, description], index) => (
+                <div key={title} className="grid grid-cols-[36px_1fr] gap-4 border-t border-white/15 pt-6">
+                  <span className="font-serif text-xl text-[#9fbe8b]">0{index + 1}</span>
+                  <div><h3 className="font-serif text-xl">{title}</h3><p className="mt-2 text-sm font-light leading-6 text-white/60">{description}</p></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-20 md:px-8 md:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#759959]">Khách hàng chia sẻ</p>
+            <h2 className="mx-auto mt-5 max-w-3xl font-serif text-4xl leading-tight tracking-[-0.025em] md:text-6xl">Những cảm nhận ở lại sau một khoảng nghỉ.</h2>
+          </div>
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            {testimonials.map((testimonial, index) => (
+              <figure key={testimonial.name} className={`flex min-h-[310px] flex-col justify-between rounded-[1.75rem] border p-7 md:p-9 ${index === 1 ? "border-[#789f5d] bg-[#edf3e8]" : "border-[#dfe7d9] bg-white"}`}>
+                <div>
+                  <div className="flex gap-1 text-[#84a66d]" aria-label="5 sao">★★★★★</div>
+                  <blockquote className="mt-7 font-serif text-xl leading-8 text-[#31412a] md:text-2xl md:leading-9">“{testimonial.quote}”</blockquote>
+                </div>
+                <figcaption className="mt-9 border-t border-[#d8e2d2] pt-5"><p className="text-sm font-semibold">{testimonial.name}</p><p className="mt-1 text-xs text-[#72806c]">{testimonial.service}</p></figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="chuyen-nha" className="border-y border-[#dfe7d9] bg-[#edf3e8] px-5 py-20 md:px-8 md:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+            <div><p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#759959]">Chuyện nhà Mombi</p><h2 className="mt-5 font-serif text-4xl tracking-[-0.025em] md:text-6xl">Một chút dịu dàng<br className="hidden sm:block" /> để đọc chậm.</h2></div>
+            <Link href="/chuyen-nha" className="inline-flex items-center gap-3 rounded-full border border-[#b7caaa] bg-white/60 px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition hover:bg-white">Xem tất cả <ArrowIcon /></Link>
+          </div>
+
+          {cmsArticles.length > 0 && (
+            <div className="grid items-stretch gap-6 lg:grid-cols-[1.35fr_0.65fr]">
+              <article className="group overflow-hidden rounded-[1.75rem] border border-[#d3dfcc] bg-white">
+                <Link href={`/chuyen-nha/${cmsArticles[0].slug}`} className="relative block aspect-[16/10] overflow-hidden bg-[#dce7d5]">
+                  <Image src={cmsArticles[0].image || "/img/landing-1.jpg"} alt={cmsArticles[0].title} fill sizes="(max-width: 1024px) 100vw, 65vw" className="object-cover transition duration-700 group-hover:scale-[1.035]" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#182415]/55 via-transparent to-transparent" />
+                  <p className="absolute bottom-5 left-5 rounded-full border border-white/25 bg-white/15 px-4 py-2 text-[10px] uppercase tracking-[0.15em] text-white backdrop-blur-md">{cmsArticles[0].date}</p>
+                </Link>
+                <div className="p-6 md:p-8">
+                  <Link href={`/chuyen-nha/${cmsArticles[0].slug}`}><h3 className="font-serif text-2xl leading-snug transition group-hover:text-[#66894e] md:text-3xl">{cmsArticles[0].title}</h3></Link>
+                  {cmsArticles[0].excerpt && <p className="mt-4 line-clamp-2 text-sm font-light leading-7 text-[#66725f]">{cmsArticles[0].excerpt}</p>}
+                  <Link href={`/chuyen-nha/${cmsArticles[0].slug}`} className="mt-6 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6d8f55]">Đọc bài viết <ArrowIcon /></Link>
+                </div>
+              </article>
+
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-1">
+                {cmsArticles.slice(1, 3).map((article) => (
+                  <article key={article._id} className="group overflow-hidden rounded-[1.75rem] border border-[#d3dfcc] bg-white">
+                    <Link href={`/chuyen-nha/${article.slug}`} className="relative block aspect-[16/8] overflow-hidden bg-[#dce7d5]">
+                      <Image src={article.image || "/img/landing-1.jpg"} alt={article.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 35vw" className="object-cover transition duration-700 group-hover:scale-[1.035]" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#182415]/55 via-transparent to-transparent" />
+                      <p className="absolute bottom-4 left-4 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-[9px] uppercase tracking-[0.15em] text-white backdrop-blur-md">{article.date}</p>
+                    </Link>
+                    <div className="p-5 md:p-6">
+                      <Link href={`/chuyen-nha/${article.slug}`}><h3 className="font-serif text-xl leading-snug transition group-hover:text-[#66894e] md:text-2xl">{article.title}</h3></Link>
+                      <Link href={`/chuyen-nha/${article.slug}`} className="mt-4 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6d8f55]">Đọc bài viết <ArrowIcon /></Link>
+                    </div>
+                  </article>
                 ))}
               </div>
-            </ScrollAnimation>
-          </div>
-
-          <div className="relative z-10 order-1 lg:order-2">
-            <ScrollAnimation delay={0.2}>
-              <div className="grid grid-cols-2 gap-3 h-[300px] sm:h-[400px] lg:h-[400px]">
-                <div className="relative w-full h-full bg-[#f6f9f2] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                  <Image src="/img/ve-mombi.jpg" alt="Về Mombi Care Spa" fill className="object-cover" />
-                </div>
-                <div className="flex flex-col gap-3 h-full">
-                  <div className="relative w-full h-[48%] bg-[#edf4e6] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                    <Image src="/img/ve-mombi1.jpg" alt="Chăm sóc da" fill className="object-cover" />
-                  </div>
-                  <div className="relative w-full h-[48%] bg-[#8bb96e]/20 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                    <Image src="/img/ve-mombi2.jpg" alt="Massage body Mombi" fill className="object-cover" />
-                  </div>
-                </div>
-              </div>
-            </ScrollAnimation>
-          </div>
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="relative py-12 md:py-16 bg-[#f6f9f2] text-center overflow-hidden border-t border-[#e4edd9]">
-        <div className="absolute top-0 left-[-10%] w-64 h-64 bg-[#8bb96e] rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-blob"></div>
-        <div className="absolute top-10 right-[-5%] w-72 h-72 bg-[#d6e5c9] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
-
-        <div className="relative z-10">
-          <ScrollAnimation>
-            <h3 className={`text-3xl md:text-4xl mb-3 text-[#2d3d25] ${playfair.className}`}>Khách hàng nói về Mombi</h3>
-            <p className="max-w-2xl mx-auto text-[#5c6e51] mb-8 md:mb-12 text-sm font-light px-4">
-              Hàng ngàn khách hàng đã trải nghiệm và tìm thấy sự thư thái trọn vẹn tại không gian của chúng tôi.
-            </p>
-          </ScrollAnimation>
-        </div>
-
-        <div className="relative z-10 w-full max-w-[1400px] mx-auto group px-4 md:px-12">
-          <button onClick={() => scrollLeft(testimonialsRef)} className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-[#e4edd9] text-[#8bb96e] hover:bg-[#8bb96e] hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 hidden md:flex">
-             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
-
-          <div ref={testimonialsRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-8 w-full no-scrollbar px-2">
-            {testimonials.map((item, index) => (
-              <div key={index} className="snap-center shrink-0 w-[280px] md:w-[350px]">
-                <ScrollAnimation delay={index * 0.1}>
-                  <div className="bg-white/80 backdrop-blur-md p-6 md:p-8 rounded-3xl text-left border border-[#e4edd9] shadow-sm hover:shadow-xl hover:shadow-[#8bb96e]/10 transition-all duration-300 flex flex-col h-full group/card">
-                    <div className="flex gap-1 mb-4 text-[#d9a05b]">
-                      {[...Array(item.rating)].map((_, i) => (
-                        <svg key={i} className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                      ))}
-                    </div>
-                    <p className="text-[#5c6e51] text-sm leading-relaxed italic mb-6 flex-1 group-hover/card:text-[#2d3d25] transition-colors">&ldquo;{item.quote}&rdquo;</p>
-                    <div className="flex items-center gap-4 mt-auto">
-                      <div className="w-10 h-10 bg-[#8bb96e]/10 rounded-full flex items-center justify-center text-[#8bb96e] font-bold text-base border border-[#8bb96e]/20">{item.name.charAt(0)}</div>
-                      <div>
-                        <h4 className={`text-[#2d3d25] font-semibold text-sm ${playfair.className}`}>{item.name}</h4>
-                        <p className="text-[#8bb96e] text-[9px] uppercase tracking-widest font-medium mt-1">{item.service}</p>
-                      </div>
-                    </div>
-                  </div>
-                </ScrollAnimation>
-              </div>
-            ))}
-          </div>
-
-          <button onClick={() => scrollRight(testimonialsRef)} className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-[#e4edd9] text-[#8bb96e] hover:bg-[#8bb96e] hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 hidden md:flex">
-             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-          </button>
-        </div>
-      </section>
-
-      <section className="py-12 md:py-16 px-4 md:px-12 lg:px-24 bg-white text-center border-t border-[#e4edd9]">
-        <div className="relative z-10">
-          <ScrollAnimation>
-            <h3 className={`text-3xl md:text-4xl mb-3 text-[#2d3d25] ${playfair.className}`}>Câu hỏi thường gặp</h3>
-            <p className="max-w-2xl mx-auto text-[#5c6e51] mb-8 md:mb-12 text-sm font-light">Giải đáp những thắc mắc phổ biến nhất để bạn an tâm thư giãn tại Mombi.</p>
-          </ScrollAnimation>
-        </div>
-        <div className="relative z-10 max-w-3xl mx-auto flex flex-col gap-3 text-left">
-          {faqs.map((faq, index) => {
-            const isOpen = openFaq === index;
-            return (
-              <ScrollAnimation key={index} delay={index * 0.1}>
-                <div className="bg-[#f6f9f2] rounded-2xl shadow-sm border border-[#e4edd9] overflow-hidden transition-all duration-300">
-                  <button onClick={() => setOpenFaq(isOpen ? null : index)} className={`w-full px-5 py-4 flex justify-between items-center transition-colors ${isOpen ? 'bg-[#8bb96e] text-white' : 'hover:bg-[#edf4e6] text-[#2d3d25]'}`}>
-                    <span className="text-sm font-medium tracking-wide pr-4">{faq.q}</span>
-                    <svg className={`w-5 h-5 flex-shrink-0 transform transition-transform duration-300 ${isOpen ? "rotate-180 text-white" : "text-[#8bb96e]"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+      <section className="bg-white px-5 py-20 md:px-8 md:py-28">
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+          <div><p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#759959]">Trước khi ghé Mombi</p><h2 className="mt-5 font-serif text-4xl leading-tight tracking-[-0.025em] md:text-5xl">Một vài điều bạn có thể muốn biết.</h2><p className="mt-6 text-sm font-light leading-7 text-[#66725f]">Nếu còn điều gì chưa rõ, hãy nhắn Mombi. Chúng mình sẽ tư vấn nhẹ nhàng trước khi bạn quyết định đặt lịch.</p></div>
+          <div className="border-t border-[#dfe7d9]">
+            {faqs.map((faq, index) => {
+              const isOpen = openFaq === index;
+              return (
+                <div key={faq.question} className="border-b border-[#dfe7d9]">
+                  <button onClick={() => setOpenFaq(isOpen ? null : index)} className="flex w-full items-center justify-between gap-5 py-6 text-left" aria-expanded={isOpen}>
+                    <span className="font-serif text-xl text-[#31412a] md:text-2xl">{faq.question}</span>
+                    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#cbd9c2] text-xl font-light transition ${isOpen ? "rotate-45 bg-[#789f5d] text-white" : "text-[#6d8e57]"}`}>+</span>
                   </button>
-                  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-40 opacity-100 py-4 px-5 bg-white" : "max-h-0 opacity-0 py-0 px-5 bg-white"}`}>
-                    <p className="text-[#5c6e51] text-sm leading-relaxed font-light">{faq.a}</p>
-                  </div>
+                  <div className={`grid transition-all duration-300 ${isOpen ? "grid-rows-[1fr] pb-6" : "grid-rows-[0fr]"}`}><div className="overflow-hidden"><p className="max-w-2xl text-sm font-light leading-7 text-[#687462]">{faq.answer}</p></div></div>
                 </div>
-              </ScrollAnimation>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </section>
 
-      <section id="chuyen-nha" className="relative py-12 md:py-16 px-4 md:px-12 lg:px-24 bg-[#edf4e6] text-center overflow-hidden">
-        <div className="absolute bottom-[-10%] left-[20%] w-80 h-80 bg-white rounded-full mix-blend-overlay filter blur-3xl opacity-40 animate-blob animation-delay-4000"></div>
-        <div className="relative z-10">
-          <ScrollAnimation>
-            <h3 className={`text-3xl md:text-4xl mb-8 md:mb-12 text-[#2d3d25] ${playfair.className}`}>Chuyện nhà Mombi</h3>
-          </ScrollAnimation>
-        </div>
-
-        <div className="relative z-10 w-full max-w-[1400px] mx-auto group px-4 md:px-12">
-          <button onClick={() => scrollLeft(storiesRef)} className="absolute left-0 md:left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-[#e4edd9] text-[#8bb96e] hover:bg-[#8bb96e] hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 hidden md:flex">
-             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
-
-          <div ref={storiesRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-6 w-full no-scrollbar px-2">
-            
-            {/* LẶP QUA DỮ LIỆU cmsArticles ĐƯỢC TRUYỀN TỪ SERVER */}
-            {cmsArticles.map((article, index) => (
-              <div key={article._id} className="snap-center shrink-0 w-[280px] md:w-[350px]">
-                <ScrollAnimation delay={index * 0.1}>
-                  <Link href={`/chuyen-nha/${article.slug}`}>
-                    <div className="bg-white rounded-3xl shadow-sm hover:shadow-xl hover:shadow-[#8bb96e]/20 transition-all duration-300 border border-[#e4edd9] overflow-hidden flex flex-col h-[420px] group/article text-left cursor-pointer">
-                      
-                      <div className="relative w-full h-[200px] overflow-hidden bg-[#f6f9f2]">
-                        {/* THÊM ẢNH FALLBACK ĐỂ TRÁNH LỖI NẾU BÀI CHƯA CÓ ẢNH */}
-                        <Image src={article.image || '/img/landing-1.jpg'} alt={article.title} fill className="object-cover group-hover/article:scale-105 transition-transform duration-700 ease-in-out" />
-                      </div>
-                      
-                      <div className="p-6 flex flex-col flex-1">
-                        <span className="text-[#8bb96e] text-[10px] uppercase tracking-widest font-medium mb-3">{article.date}</span>
-                        <h4 className={`text-[17px] text-[#2d3d25] mb-2 leading-snug line-clamp-2 ${playfair.className} group-hover/article:text-[#8bb96e] transition-colors`}>{article.title}</h4>
-                        <p className="text-[#5c6e51] text-xs font-light leading-relaxed line-clamp-3 mb-4 flex-1">{article.excerpt}</p>
-                        
-                        <div className="mt-auto flex items-center text-[#8bb96e] text-xs font-medium tracking-wide group-hover/article:translate-x-1 transition-transform">
-                          Đọc bài viết
-                          <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                        </div>
-                      </div>
-
-                    </div>
-                  </Link>
-                </ScrollAnimation>
-              </div>
-            ))}
+      <section id="lien-he" className="px-5 pb-20 md:px-8 md:pb-28">
+        <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[2rem] bg-[#26351f] lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="flex flex-col justify-between p-7 text-white md:p-12 lg:p-14">
+            <div><p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#b7d3a4]">Ghé thăm Mombi</p><h2 className="mt-5 font-serif text-4xl leading-tight md:text-5xl">Khoảng nghỉ của bạn đang chờ.</h2><p className="mt-6 text-sm font-light leading-7 text-white/65">34 Trần Khánh Dư, Buôn Ma Thuột<br />Hotline: 0934 250 909</p></div>
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row"><a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 rounded-full bg-[#91bd72] px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#172313]">Đặt lịch qua Zalo <ArrowIcon /></a><a href="tel:0934250909" className="inline-flex items-center justify-center rounded-full border border-white/25 px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.14em]">Gọi Mombi</a></div>
           </div>
-
-          <button onClick={() => scrollRight(storiesRef)} className="absolute right-0 md:right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-[#e4edd9] text-[#8bb96e] hover:bg-[#8bb96e] hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 hidden md:flex">
-             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-          </button>
-        </div>
-
-        <div className="relative z-10 mt-6">
-          <ScrollAnimation delay={0.3}>
-            <Link href="/chuyen-nha">
-              <button className="bg-[#8bb96e] text-white rounded-full px-8 md:px-10 py-3 text-xs md:text-sm tracking-widest hover:bg-[#739f55] transition-all shadow-md">
-                XEM TẤT CẢ BÀI VIẾT
-              </button>
-            </Link>
-          </ScrollAnimation>
+          <div className="min-h-[420px] bg-[#dfe8d7] lg:min-h-[560px]">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d16495.528009611553!2d108.04502350853478!3d12.68557249339919!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3171f767729424c1%3A0xa17b2040c8d0d5bd!2sMombicare%20spa!5e0!3m2!1svi!2s!4v1783165042726!5m2!1svi!2s" width="100%" height="100%" style={{border: 0}} loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Bản đồ đường đến Mombi Care Spa" />
+          </div>
         </div>
       </section>
 
-      <section className="py-12 md:py-16 px-4 md:px-12 lg:px-24 bg-white border-t border-[#e4edd9]">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
-          <ScrollAnimation>
-            <div className="flex flex-col gap-5">
-              <h3 className={`text-3xl md:text-4xl text-[#2d3d25] ${playfair.className}`}>Vị trí của Mombi</h3>
-              <p className="text-[#5c6e51] text-sm md:text-base leading-relaxed font-light">Mombi Care Spa nằm ẩn mình giữa những tán cây xanh mát trên đường Trần Khánh Dư... Chúng tôi có bãi đậu xe ô tô và xe máy rộng rãi.</p>
-              <div className="flex items-center gap-4 mt-2">
-                <div className="w-10 h-10 bg-[#f6f9f2] rounded-full flex items-center justify-center text-[#8bb96e]">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
-                </div>
-                <div><h4 className="text-[#2d3d25] font-semibold text-sm">Địa chỉ</h4><p className="text-[#5c6e51] text-sm mt-0.5">34 Trần Khánh Dư, P. Tân Lợi, TP. Buôn Ma Thuột</p></div>
-              </div>
-              <div className="flex items-center gap-4 mt-2">
-                <div className="w-10 h-10 bg-[#f6f9f2] rounded-full flex items-center justify-center text-[#8bb96e]">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.896-1.596-5.48-4.18-7.076-7.076l1.293-.97c.362-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
-                </div>
-                <div><h4 className="text-[#2d3d25] font-semibold text-sm">Hotline đặt lịch</h4><p className="text-[#5c6e51] text-sm mt-0.5">0934 250 909</p></div>
-              </div>
-            </div>
-          </ScrollAnimation>
-          <ScrollAnimation delay={0.2}>
-            <div className="w-full h-[300px] md:h-[350px] rounded-3xl overflow-hidden shadow-lg border border-[#e4edd9]">
-              <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d16495.528009611553!2d108.04502350853478!3d12.68557249339919!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3171f767729424c1%3A0xa17b2040c8d0d5bd!2sMombicare%20spa!5e0!3m2!1svi!2s!4v1783165042726!5m2!1svi!2s" width="100%" height="100%" style={{ border: 0 }} allowFullScreen={false} loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Bản đồ đường đi"></iframe>
-            </div>
-          </ScrollAnimation>
-        </div>
-      </section>
+      <SiteFooter />
 
-      <footer className="bg-[#2d3d25] py-12 md:py-16 px-6 md:px-16 lg:px-24">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
-          
-          <div className="flex flex-col items-start gap-4">
-            <div className="relative w-36 h-12 bg-white rounded-xl overflow-hidden px-2 shadow-lg">
-               <Image src="/img/logo-mombicare.jpg" alt="Mombi Care Spa Logo Footer" fill sizes="(max-width: 768px) 144px, 144px" className="object-contain p-1" />
-            </div>
-            <p className="text-sm text-[#d6e5c9] mt-2 leading-relaxed pr-6 font-light">
-              Tìm về một nhịp nghỉ vừa vặn giữa lòng thành phố với không gian xanh mát và sự chăm sóc từ tâm.
-            </p>
-            <p className="text-xs text-[#8bb96e] mt-1 tracking-wider">© 2026 MOMBI CARE SPA</p>
-          </div>
-          
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-white mb-5 md:mb-6">Liên kết nhanh</h4>
-            <ul className="flex flex-col gap-3 text-sm text-[#d6e5c9] font-light">
-              <li><Link href="/" className="hover:text-[#a9d18c] transition-colors">Trang chủ</Link></li>
-              <li><Link href="/#ve-mombi" className="hover:text-[#a9d18c] transition-colors">Về Mombi Care Spa</Link></li>
-              <li><Link href="/phieu-qua-tang" className="hover:text-[#a9d18c] transition-colors">Phiếu quà tặng</Link></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-white mb-5 md:mb-6">Các dịch vụ</h4>
-            <ul className="flex flex-col gap-3 text-sm text-[#d6e5c9] font-light">
-              <li><Link href="/dich-vu/massage-thu-gian" className="hover:text-[#a9d18c] transition-colors">Gội đầu dưỡng sinh</Link></li>
-              <li><Link href="/dich-vu/massage-thu-gian" className="hover:text-[#a9d18c] transition-colors">Massage vai cổ gáy</Link></li>
-              <li><Link href="/dich-vu/cham-soc-da" className="hover:text-[#a9d18c] transition-colors">Chăm sóc da cơ bản</Link></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-white mb-5 md:mb-6">Thông tin liên hệ</h4>
-            <ul className="flex flex-col gap-3 text-sm text-[#d6e5c9] font-light leading-relaxed">
-              <li className="flex items-start gap-3">
-                <svg className="w-5 h-5 mt-0.5 flex-shrink-0 text-[#8bb96e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
-                <span>34 Trần Khánh Dư, P. Tân Lợi, TP. Buôn Ma Thuột, Đắk Lắk</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <svg className="w-5 h-5 mt-0.5 flex-shrink-0 text-[#8bb96e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.896-1.596-5.48-4.18-7.076-7.076l1.293-.97c.362-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
-                <span>0934 250 909</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <svg className="w-5 h-5 mt-0.5 flex-shrink-0 text-[#8bb96e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-                <span>mombicarespa@gmail.com</span>
-              </li>
-            </ul>
-          </div>
-          
-        </div>
-      </footer>
-
-      {showPopup && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm transition-opacity duration-300">
-          <div className="bg-white rounded-3xl w-full max-w-md p-8 relative shadow-2xl flex flex-col text-center animate-bounce-in">
-            <button onClick={() => { setShowPopup(false); setHasClosedPopup(true); }} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[#f6f9f2] text-[#5c6e51] hover:bg-[#e4edd9] hover:text-[#2d3d25] transition-colors">
-              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" viewBox="0 0 24 24"/></svg>
-            </button>
-            <div className="w-14 h-14 bg-[#edf4e6] rounded-full mx-auto mb-4 flex items-center justify-center text-[#8bb96e]">
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
-            </div>
-            <h3 className={`text-2xl text-[#2d3d25] mb-2 ${playfair.className}`}>Tặng bạn Voucher 20%</h3>
-            <p className="text-sm text-[#5c6e51] font-light mb-5">Dành riêng cho khách hàng trải nghiệm lần đầu tại Mombi. Nhập số Zalo để nhận mã ngay!</p>
-            <form className="flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); setShowPopup(false); setHasClosedPopup(true); alert("Đăng ký thành công! Mombi sẽ liên hệ lại qua Zalo ạ."); }}>
-              <input type="tel" placeholder="Nhập số điện thoại/Zalo của bạn" required className="w-full px-5 py-3 rounded-full bg-[#f6f9f2] border border-[#e4edd9] text-sm text-[#2d3d25] focus:outline-none focus:border-[#8bb96e] transition-colors" />
-              <button type="submit" className="w-full bg-[#8bb96e] text-white rounded-full px-8 py-3.5 text-xs md:text-sm tracking-widest hover:bg-[#739f55] transition-all shadow-md mt-1">NHẬN ƯU ĐÃI NGAY</button>
-            </form>
-          </div>
-        </div>
-      )}
-      <style dangerouslySetInnerHTML={{__html: `@keyframes bounceIn { 0% { transform: scale(0.9); opacity: 0; } 50% { transform: scale(1.02); opacity: 1; } 100% { transform: scale(1); opacity: 1; } } .animate-bounce-in { animation: bounceIn 0.4s ease-out forwards; }`}} />
-
-      <aside className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 flex flex-col gap-4">
-        <a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="w-12 h-12 md:w-14 md:h-14 bg-[#25D366] rounded-full shadow-xl shadow-[#25D366]/30 flex items-center justify-center hover:scale-110 transition-transform text-white" aria-label="Zalo Mombi Care Spa">
-          <svg width="24" height="24" className="md:w-[28px] md:h-[28px]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 2.16.69 4.15 1.84 5.76L2.6 21.6l3.97-1.15C8.06 21.43 9.98 22 12 22c5.52 22 10-4.48 10-10S17.52 2 12 2zm-1.8 15.1l-.1-.1c-1.3-.8-2.6-2.1-3.4-3.4-.1-.1-.1-.2-.1-.3s.1-.3.2-.4l.9-.9c.2-.2.2-.4.1-.6l-1.3-3.2c-.1-.3-.4-.3-.6-.3h-1.3c-.3 0-.6.2-.7.4-.7.9-1.2 2-1.2 3.2 0 1.9.9 3.8 2.2 5.1 1.3 1.3 3.2 2.2 5.1 2.2 1.2 0 2.3-.5 3.2-1.2.2-.2.4-.4.4-.7v-1.3c0-.3-.1-.5-.3-.6l-3.2-1.3c-.2-.1-.4-.1-.6.1l-.9.9c-.1.2-.3.2-.5.1z"/></svg>
-        </a>
-      </aside>
+      <a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-[#1fce70] px-5 py-3 text-xs font-semibold text-white shadow-[0_14px_35px_rgba(31,206,112,.32)] transition hover:-translate-y-0.5 md:bottom-7 md:right-7" aria-label="Nhắn Mombi qua Zalo">
+        <span className="grid h-6 w-6 place-items-center rounded-full bg-white/20 text-[10px]">Z</span> Nhắn Mombi
+      </a>
     </main>
   );
 }
