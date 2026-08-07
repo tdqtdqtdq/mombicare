@@ -11,6 +11,7 @@ const beVietnam = Be_Vietnam_Pro({ subsets: ["vietnamese"], weight: ["300", "400
 export const metadata: Metadata = {
   title: "Chuyện nhà Mombi | Chăm sóc da & thư giãn",
   description: "Kiến thức chăm sóc da, massage trị liệu và những câu chuyện an yên từ Mombi Care Spa.",
+  alternates: {canonical: "/chuyen-nha"},
 };
 
 type ArticleCard = { _id: string; title: string; slug: string; excerpt?: string; image?: string; imageAlt?: string; date?: string };

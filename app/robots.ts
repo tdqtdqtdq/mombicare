@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
     },
-    sitemap: 'https://mombicarespa.com/sitemap.xml',
+    sitemap: 'https://www.mombicarespa.com/sitemap.xml',
   }
 }
