@@ -125,7 +125,7 @@ export default function HomeClient({cmsArticles}: {cmsArticles: HomeArticle[]}) 
                 </div>
               </div>
               <Link href="#ve-mombi" className="transition-colors hover:text-[#c7e4b3]">Về Mombi</Link>
-              <Link href="#chuyen-nha" className="transition-colors hover:text-[#c7e4b3]">Chuyện nhà Mombi</Link>
+              <Link href="/chuyen-nha" className="transition-colors hover:text-[#c7e4b3]">Chuyện nhà Mombi</Link>
               <Link href="#lien-he" className="transition-colors hover:text-[#c7e4b3]">Liên hệ</Link>
             </nav>
 
@@ -152,7 +152,7 @@ export default function HomeClient({cmsArticles}: {cmsArticles: HomeArticle[]}) 
               </div>
             </div>
             <Link href="#ve-mombi" className="border-b border-[#edf2e9] py-4" onClick={() => setIsMobileMenuOpen(false)}>Về Mombi</Link>
-            <Link href="#chuyen-nha" className="border-b border-[#edf2e9] py-4" onClick={() => setIsMobileMenuOpen(false)}>Chuyện nhà Mombi</Link>
+            <Link href="/chuyen-nha" className="border-b border-[#edf2e9] py-4" onClick={() => setIsMobileMenuOpen(false)}>Chuyện nhà Mombi</Link>
             <Link href="#lien-he" className="py-4" onClick={() => setIsMobileMenuOpen(false)}>Liên hệ</Link>
           </nav>
         </div>
@@ -325,7 +325,7 @@ export default function HomeClient({cmsArticles}: {cmsArticles: HomeArticle[]}) 
               </article>
 
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-1">
-                {cmsArticles.slice(1, 3).map((article) => (
+                {cmsArticles.slice(1, 4).map((article) => (
                   <article key={article._id} className="group overflow-hidden rounded-[1.75rem] border border-[#d3dfcc] bg-white">
                     <Link href={`/chuyen-nha/${article.slug}`} className="relative block aspect-[16/8] overflow-hidden bg-[#dce7d5]">
                       <Image src={article.image || "/img/landing-1.jpg"} alt={article.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 35vw" className="object-cover transition duration-700 group-hover:scale-[1.035]" />
@@ -339,6 +339,17 @@ export default function HomeClient({cmsArticles}: {cmsArticles: HomeArticle[]}) 
                   </article>
                 ))}
               </div>
+
+              {cmsArticles.length > 4 && (
+                <div className="grid gap-3 border-t border-[#d3dfcc] pt-6 sm:grid-cols-2 lg:col-span-2">
+                  {cmsArticles.slice(4).map((article) => (
+                    <Link key={article._id} href={`/chuyen-nha/${article.slug}`} className="flex items-center justify-between gap-5 rounded-2xl border border-[#d3dfcc] bg-white/60 px-5 py-4 transition hover:bg-white">
+                      <span className="font-serif text-lg leading-snug text-[#33432c]">{article.title}</span>
+                      <span className="shrink-0 text-[#6d8f55]" aria-hidden="true"><ArrowIcon /></span>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

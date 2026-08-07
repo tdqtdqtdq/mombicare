@@ -18,7 +18,7 @@ type ArticleCard = { _id: string; title: string; slug: string; excerpt?: string;
 
 async function getArticles(): Promise<ArticleCard[]> {
   return client.fetch(`
-    *[_type == "article" && defined(slug.current)] | order(publishedAt desc) {
+    *[_type == "article" && defined(slug.current) && seo.noIndex != true] | order(publishedAt desc) {
       _id, title, "slug": slug.current, excerpt,
       "image": mainImage.asset->url,
       "imageAlt": coalesce(mainImage.alt, title),

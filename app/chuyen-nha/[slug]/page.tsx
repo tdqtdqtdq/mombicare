@@ -27,6 +27,13 @@ type Article = {
   body?: PortableTextBlock[];
 };
 
+type RelatedArticle = {
+  _id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+};
+
 const articleQuery = `
   *[_type == "article" && slug.current == $slug][0] {
     _id,
@@ -55,6 +62,18 @@ async function getArticle(slug: string): Promise<Article | null> {
   return client.fetch(articleQuery, { slug }, { next: { revalidate: 60 } });
 }
 
+async function getRelatedArticles(slug: string): Promise<RelatedArticle[]> {
+  return client.fetch(`
+    *[_type == "article" && defined(slug.current) && slug.current != $slug && seo.noIndex != true]
+      | order(publishedAt desc)[0...3] {
+        _id,
+        title,
+        "slug": slug.current,
+        excerpt
+      }
+  `, {slug}, {next: {revalidate: 60}});
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const article = await getArticle(slug);
@@ -81,6 +100,7 @@ export default async function ArticleDetail({ params }: { params: Promise<{ slug
   const { slug } = await params;
   const article = await getArticle(slug);
   if (!article) notFound();
+  const relatedArticles = await getRelatedArticles(slug);
 
   const articleJsonLd = {
     '@context': 'https://schema.org',
@@ -137,6 +157,33 @@ export default async function ArticleDetail({ params }: { params: Promise<{ slug
             </div>
           </div>
         </article>
+
+        <section className="mx-auto mb-20 w-[calc(100%-2rem)] max-w-5xl rounded-[1.75rem] bg-[#26351f] p-7 text-white md:p-10" aria-labelledby="related-content-title">
+          <div className="flex flex-col justify-between gap-6 border-b border-white/15 pb-8 md:flex-row md:items-end">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b7d3a4]">Tiếp tục khám phá</p>
+              <h2 id="related-content-title" className={`mt-3 text-3xl md:text-4xl ${playfair.className}`}>Chăm sóc phù hợp với bạn</h2>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/dich-vu/massage-thu-gian" className="rounded-full border border-white/25 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] transition hover:bg-white hover:text-[#26351f]">Massage thư giãn</Link>
+              <Link href="/dich-vu/cham-soc-da" className="rounded-full border border-white/25 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] transition hover:bg-white hover:text-[#26351f]">Chăm sóc da</Link>
+            </div>
+          </div>
+
+          {relatedArticles.length > 0 && (
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {relatedArticles.map((relatedArticle) => (
+                <article key={relatedArticle._id} className="rounded-2xl bg-white/[0.07] p-5">
+                  <h3 className={`text-xl leading-snug ${playfair.className}`}>
+                    <Link href={`/chuyen-nha/${relatedArticle.slug}`} className="transition hover:text-[#c7e4b3]">{relatedArticle.title}</Link>
+                  </h3>
+                  {relatedArticle.excerpt && <p className="mt-3 line-clamp-3 text-sm font-light leading-6 text-white/60">{relatedArticle.excerpt}</p>}
+                  <Link href={`/chuyen-nha/${relatedArticle.slug}`} className="mt-5 inline-flex text-[10px] font-semibold uppercase tracking-[0.14em] text-[#b7d3a4]">Đọc tiếp <span className="ml-2" aria-hidden="true">→</span></Link>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
       <SiteFooter />
     </div>

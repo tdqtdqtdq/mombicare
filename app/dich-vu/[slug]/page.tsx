@@ -2,9 +2,23 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {notFound} from 'next/navigation'
 import {SiteFooter, SiteHeader} from '@/app/components/SiteChrome'
+import {client} from '@/app/lib/sanity'
 
 type Service = {title: string; time: string; price: string; desc: string}
+type RelatedArticle = {_id: string; title: string; slug: string; excerpt?: string}
 type Props = {params: Promise<{slug: string}>}
+
+async function getRelatedArticles(): Promise<RelatedArticle[]> {
+  return client.fetch(`
+    *[_type == "article" && defined(slug.current) && seo.noIndex != true]
+      | order(publishedAt desc)[0...3] {
+        _id,
+        title,
+        "slug": slug.current,
+        excerpt
+      }
+  `, {}, {next: {revalidate: 60}})
+}
 
 const skincareServices: Service[] = [
   {title: 'Chăm sóc da cơ bản', time: '60 phút', price: '150.000đ', desc: 'Làm sạch sâu, nuôi dưỡng, massage thư giãn và bảo vệ làn da.'},
@@ -59,6 +73,7 @@ export default async function ServiceCategoryPage({params}: Props) {
   const {slug} = await params
   const content = pageContent[slug as keyof typeof pageContent]
   if (!content) notFound()
+  const relatedArticles = await getRelatedArticles()
 
   return (
     <div className="min-h-screen bg-[#f8f7f2] text-[#26351f]">
@@ -114,6 +129,32 @@ export default async function ServiceCategoryPage({params}: Props) {
             </div>
           </div>
         </section>
+
+        {relatedArticles.length > 0 && (
+          <section className="bg-[#edf3e8] px-4 py-14 md:px-8 md:py-20" aria-labelledby="service-guides-title">
+            <div className="mx-auto max-w-7xl">
+              <div className="mb-9 flex flex-col items-start justify-between gap-5 md:flex-row md:items-end">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#789b5e]">Chuyện nhà Mombi</p>
+                  <h2 id="service-guides-title" className="mt-4 font-serif text-3xl tracking-[-0.02em] md:text-5xl">Đọc thêm trước khi chọn liệu trình</h2>
+                </div>
+                <Link href="/chuyen-nha" className="text-xs font-semibold uppercase tracking-[0.14em] text-[#688b50] transition hover:text-[#4f7138]">Xem tất cả bài viết <span aria-hidden="true">→</span></Link>
+              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                {relatedArticles.map((article) => (
+                  <article key={article._id} className="rounded-2xl border border-[#d7e2d0] bg-white p-6 md:p-7">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#82a36b]">Cẩm nang Mombi</p>
+                    <h3 className="mt-4 font-serif text-2xl leading-snug text-[#2a3923]">
+                      <Link href={`/chuyen-nha/${article.slug}`} className="transition hover:text-[#66894e]">{article.title}</Link>
+                    </h3>
+                    {article.excerpt && <p className="mt-4 line-clamp-3 text-sm font-light leading-7 text-[#64725d]">{article.excerpt}</p>}
+                    <Link href={`/chuyen-nha/${article.slug}`} className="mt-6 inline-flex text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6d8f55]">Đọc bài viết <span className="ml-2" aria-hidden="true">→</span></Link>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="px-4 py-14 md:px-8 md:py-20">
           <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 rounded-[1.75rem] bg-[#26351f] px-7 py-10 text-white md:flex-row md:items-center md:px-12">

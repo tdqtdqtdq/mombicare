@@ -2,10 +2,11 @@
 import HomeClient from "./components/HomeClient";
 import { client, formatPublishedDate } from "./lib/sanity";
 
-// Hàm gọi 4 bài viết mới nhất từ Sanity
+// Lấy các bài đã xuất bản để tạo liên kết nội bộ từ trang chủ.
 async function getLatestArticles() {
   const query = `
-    *[_type == "article"] | order(publishedAt desc)[0...4] {
+    *[_type == "article" && defined(slug.current) && seo.noIndex != true]
+      | order(publishedAt desc)[0...6] {
       _id,
       title,
       "slug": slug.current,
@@ -14,14 +15,12 @@ async function getLatestArticles() {
       "date": publishedAt
     }
   `;
-  return await client.fetch(query);
+  return client.fetch(query, {}, {next: {revalidate: 60}});
 }
 
 export default async function Page() {
-  // Đợi lấy dữ liệu xong
   const articles = await getLatestArticles();
 
-  // Đẩy dữ liệu xuống file HomeClient để nó vẽ giao diện
   return <HomeClient cmsArticles={articles.map((article: { date?: string }) => ({
     ...article,
     date: formatPublishedDate(article.date),

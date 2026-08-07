@@ -5,40 +5,44 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  // Giải quyết Promise của Next.js bản mới
-  const resolvedParams = await params;
-  const isSkincare = resolvedParams.slug === "cham-soc-da";
-  
-  const keywords = isSkincare 
-    ? ["chăm sóc da BMT", "cấy HA Buôn Ma Thuột", "trị mụn chuẩn y khoa", "spa chăm sóc da cao cấp", "Mombi Care Spa"]
-    : ["massage thư giãn BMT", "gội đầu dưỡng sinh Buôn Ma Thuột", "massage cổ vai gáy", "Mombi Care Spa", "spa trị liệu"];
+  const {slug} = await params;
+  const serviceMetadata = {
+    "cham-soc-da": {
+      title: "Chăm sóc da Buôn Ma Thuột | Mombi Care Spa",
+      description: "Chăm sóc da tại Buôn Ma Thuột với liệu trình làm sạch, dưỡng ẩm và chăm sóc chuyên sâu. Xem thời lượng, bảng giá và đặt lịch tại Mombi Care Spa.",
+      keywords: ["chăm sóc da Buôn Ma Thuột", "spa chăm sóc da BMT", "lấy nhân mụn Buôn Ma Thuột", "Mombi Care Spa"],
+      image: "https://www.mombicarespa.com/img/skin-care.jpg",
+    },
+    "massage-thu-gian": {
+      title: "Massage thư giãn Buôn Ma Thuột | Mombi Care Spa",
+      description: "Massage thư giãn tại Buôn Ma Thuột với massage body, cổ vai gáy và gội đầu dưỡng sinh. Xem thời lượng, bảng giá và đặt lịch tại Mombi Care Spa.",
+      keywords: ["massage Buôn Ma Thuột", "massage thư giãn BMT", "massage cổ vai gáy", "gội đầu dưỡng sinh Buôn Ma Thuột", "Mombi Care Spa"],
+      image: "https://www.mombicarespa.com/img/massage%20body%20mombi%20care%20spa.jpg",
+    },
+  } as const;
 
-  const title = isSkincare 
-    ? "Chăm Sóc Da Cao Cấp, Phục Hồi Chuẩn Y Khoa | Mombi Care Spa"
-    : "Massage Thư Giãn, Gội Đầu Dưỡng Sinh Trị Liệu | Mombi Care Spa";
+  const service = serviceMetadata[slug as keyof typeof serviceMetadata];
+  if (!service) return {};
 
-  const description = isSkincare
-    ? "Trải nghiệm dịch vụ chăm sóc da chuyên sâu, cấy HA căng bóng, điều trị mụn chuẩn y khoa tại Mombi Care Spa Buôn Ma Thuột. Không gian thư giãn, kỹ thuật viên chuyên nghiệp."
-    : "Tận hưởng không gian thư giãn tuyệt đối với dịch vụ gội đầu dưỡng sinh, massage cổ vai gáy và massage body trị liệu tại Mombi Care Spa BMT.";
-
-  const url = `https://www.mombicarespa.com/dich-vu/${resolvedParams.slug}`;
+  const url = `https://www.mombicarespa.com/dich-vu/${slug}`;
 
   return {
-    title,
-    description,
-    keywords,
+    title: service.title,
+    description: service.description,
+    keywords: [...service.keywords],
     alternates: { canonical: url },
+    robots: {index: true, follow: true},
     openGraph: {
-      title,
-      description,
+      title: service.title,
+      description: service.description,
       url,
       siteName: "Mombi Care Spa",
       images: [
         {
-          url: isSkincare ? "https://www.mombicarespa.com/img/skin-care.jpg" : "https://www.mombicarespa.com/img/massage%20body%20mombi%20care%20spa.jpg",
+          url: service.image,
           width: 1200,
           height: 630,
-          alt: title,
+          alt: service.title,
         }
       ],
       locale: "vi_VN",
@@ -46,8 +50,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title,
-      description,
+      title: service.title,
+      description: service.description,
+      images: [service.image],
     }
   };
 }
