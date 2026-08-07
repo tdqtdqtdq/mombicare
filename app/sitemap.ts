@@ -1,37 +1,38 @@
-// app/sitemap.ts
-import { MetadataRoute } from 'next'
+import type {MetadataRoute} from 'next'
+import {client} from './lib/sanity'
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  // Lấy danh sách các bài viết tĩnh đang có trong code của bạn
-  const cmsArticles = [
-    { slug: "hanh-trinh-tim-ve-nhip-nghi", date: "2026-04-12" },
-    { slug: "giai-ma-lieu-trinh-goi-dau-duong-sinh", date: "2026-04-05" },
-    { slug: "vi-sao-cay-ha-cang-bong-duoc-yeu-thich", date: "2026-03-28" },
-    { slug: "5-bi-quyet-duy-tri-lan-da-khoe-manh", date: "2026-03-20" }
-  ];
+type SitemapArticle = {slug: string; updatedAt?: string}
 
-  // Map các bài viết thành URL cho sitemap
-  const articleUrls = cmsArticles.map((article) => ({
-    url: `https://mombicarespa.com/chuyen-nha/${article.slug}`,
-    lastModified: new Date(article.date),
-    changeFrequency: 'weekly' as const,
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const articles = await client.fetch<SitemapArticle[]>(`
+    *[_type == "article" && defined(slug.current) && seo.noIndex != true] {
+      "slug": slug.current,
+      "updatedAt": _updatedAt
+    }
+  `, {}, {next: {revalidate: 3600}})
+
+  const articleUrls: MetadataRoute.Sitemap = articles.map((article) => ({
+    url: `https://www.mombicarespa.com/chuyen-nha/${article.slug}`,
+    lastModified: article.updatedAt ? new Date(article.updatedAt) : new Date(),
+    changeFrequency: 'weekly',
     priority: 0.7,
-  }));
+  }))
 
-  // Khai báo các trang tĩnh (Trang chủ, dịch vụ, quà tặng...)
- // Khai báo các trang tĩnh (Trang chủ, dịch vụ, quà tặng...)
   const routes = [
-    '',
-    '/dich-vu/cham-soc-da',
-    '/dich-vu/massage-thu-gian',
-    '/phieu-qua-tang',
-    '/chuyen-nha',
-  ].map((route) => ({
-    url: `https://mombicarespa.com${route}`,
-    lastModified: new Date(),
-    // Đã sửa dòng dưới đây: Thêm ngoặc và ép kiểu
-    changeFrequency: (route === '' ? 'daily' : 'weekly') as "daily" | "weekly", 
-    priority: route === '' ? 1 : 0.8,
-  }));
-  return [...routes, ...articleUrls];
+    {path: '', frequency: 'daily' as const, priority: 1},
+    {path: '/dich-vu', frequency: 'weekly' as const, priority: 0.9},
+    {path: '/dich-vu/cham-soc-da', frequency: 'weekly' as const, priority: 0.8},
+    {path: '/dich-vu/massage-thu-gian', frequency: 'weekly' as const, priority: 0.8},
+    {path: '/chuyen-nha', frequency: 'daily' as const, priority: 0.8},
+  ]
+
+  return [
+    ...routes.map(({path, frequency, priority}) => ({
+      url: `https://www.mombicarespa.com${path}`,
+      lastModified: new Date(),
+      changeFrequency: frequency,
+      priority,
+    })),
+    ...articleUrls,
+  ]
 }

@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? "Trải nghiệm dịch vụ chăm sóc da chuyên sâu, cấy HA căng bóng, điều trị mụn chuẩn y khoa tại Mombi Care Spa Buôn Ma Thuột. Không gian thư giãn, kỹ thuật viên chuyên nghiệp."
     : "Tận hưởng không gian thư giãn tuyệt đối với dịch vụ gội đầu dưỡng sinh, massage cổ vai gáy và massage body trị liệu tại Mombi Care Spa BMT.";
 
-  const url = `https://mombicarespa.vn/dich-vu/${resolvedParams.slug}`;
+  const url = `https://www.mombicarespa.com/dich-vu/${resolvedParams.slug}`;
 
   return {
     title,
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Mombi Care Spa",
       images: [
         {
-          url: isSkincare ? "https://mombicarespa.vn/img/skin-care.jpg" : "https://mombicarespa.vn/img/massage-hero.jpg",
+          url: isSkincare ? "https://www.mombicarespa.com/img/skin-care.jpg" : "https://www.mombicarespa.com/img/massage%20body%20mombi%20care%20spa.jpg",
           width: 1200,
           height: 630,
           alt: title,
