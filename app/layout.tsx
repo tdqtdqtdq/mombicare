@@ -14,6 +14,7 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.mombicarespa.com'),
+  applicationName: 'Mombi Care Spa',
   alternates: {
     canonical: '/',
   },
@@ -59,8 +60,9 @@ export default function RootLayout({
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'HealthAndBeautyBusiness',
+              '@id': 'https://www.mombicarespa.com/#business',
               name: 'Mombi Care Spa',
-              url: 'https://www.mombicarespa.com',
+              url: 'https://www.mombicarespa.com/',
               logo: 'https://www.mombicarespa.com/icon.png',
               image: 'https://www.mombicarespa.com/img/landing-1.jpg',
               telephone: '+84934250909',

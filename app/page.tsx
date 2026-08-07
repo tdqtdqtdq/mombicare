@@ -2,6 +2,16 @@
 import HomeClient from "./components/HomeClient";
 import { client, formatPublishedDate } from "./lib/sanity";
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://www.mombicarespa.com/#website",
+  url: "https://www.mombicarespa.com/",
+  name: "Mombi Care Spa",
+  inLanguage: "vi-VN",
+  publisher: {"@id": "https://www.mombicarespa.com/#business"},
+};
+
 // Lấy các bài đã xuất bản để tạo liên kết nội bộ từ trang chủ.
 async function getLatestArticles() {
   const query = `
@@ -21,8 +31,13 @@ async function getLatestArticles() {
 export default async function Page() {
   const articles = await getLatestArticles();
 
-  return <HomeClient cmsArticles={articles.map((article: { date?: string }) => ({
-    ...article,
-    date: formatPublishedDate(article.date),
-  }))} />;
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify(websiteJsonLd)}} />
+      <HomeClient cmsArticles={articles.map((article: { date?: string }) => ({
+        ...article,
+        date: formatPublishedDate(article.date),
+      }))} />
+    </>
+  );
 }

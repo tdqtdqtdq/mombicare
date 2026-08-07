@@ -3,7 +3,7 @@ import type {MetadataRoute} from 'next'
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Mombi Care Spa',
-    short_name: 'Mombi Care',
+    short_name: 'Mombi Care Spa',
     description: 'Spa chăm sóc da và massage thư giãn tại Buôn Ma Thuột.',
     start_url: '/',
     display: 'standalone',
