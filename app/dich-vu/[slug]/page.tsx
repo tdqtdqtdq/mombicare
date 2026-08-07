@@ -91,9 +91,9 @@ export default function ServiceCategoryPage({ params }: Props) {
             onMouseLeave={() => setIsDropdownOpen(false)}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            <span className={`cursor-pointer transition-colors border-b-2 pb-1 ${isDropdownOpen ? 'text-[#8bb96e] border-[#8bb96e]' : 'text-[#5c6e51] border-transparent hover:text-[#8bb96e] hover:border-[#8bb96e]'}`}>
+            <Link href="/dich-vu" className={`transition-colors border-b-2 pb-1 ${isDropdownOpen ? 'text-[#8bb96e] border-[#8bb96e]' : 'text-[#5c6e51] border-transparent hover:text-[#8bb96e] hover:border-[#8bb96e]'}`}>
               Dịch vụ
-            </span>
+            </Link>
             
             <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 w-56 transition-all duration-300 z-50 ${isDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
               <div className="bg-white rounded-xl shadow-2xl shadow-[#8bb96e]/10 border border-[#e4edd9] flex flex-col py-2 overflow-hidden">
@@ -186,7 +186,7 @@ export default function ServiceCategoryPage({ params }: Props) {
       <section className="w-full h-[35vh] md:h-[60vh] lg:h-[70vh] relative">
         <div className="absolute inset-0 w-full h-full bg-[#e4edd9]">
             <Image 
-             src={isSkincare ? "/img/skin-care.jpg" : "/img/massage-hero.jpg"} 
+             src={isSkincare ? "/img/skin-care.jpg" : "/img/massage body mombi care spa.jpg"}
              alt={isSkincare ? "Chăm sóc da chuyên sâu tại Mombi Care Spa" : "Massage thư giãn trị liệu tại Mombi Care Spa"} 
              fill 
              className="object-cover" 
