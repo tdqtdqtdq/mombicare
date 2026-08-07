@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-inter",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-playfair",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.mombicarespa.com'),
@@ -44,7 +52,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <body className={`${inter.className} bg-[#f9f8f4] text-gray-800`}>
+      <body className={`${inter.variable} ${playfair.variable} bg-[#f9f8f4] text-gray-800`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
