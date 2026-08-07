@@ -124,61 +124,61 @@ export default async function ArticleDetail({ params }: { params: Promise<{ slug
       <SiteHeader />
       <main>
         <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify(articleJsonLd)}} />
-        <header className="relative overflow-hidden border-b border-[#e2e9dc] bg-[#edf3e8] px-4 pb-20 pt-14 text-center md:pb-28 md:pt-20">
+        <header className="relative overflow-hidden border-b border-[#e2e9dc] bg-[#edf3e8] px-3 pb-16 pt-8 text-center sm:px-4 sm:pb-20 sm:pt-12 md:pb-28 md:pt-20">
           <div className="pointer-events-none absolute -left-28 -top-28 h-80 w-80 rounded-full bg-[#c8ddba]/30 blur-3xl" />
           <div className="relative mx-auto max-w-4xl">
-            <nav className="mb-7 flex items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-[#6f915a]" aria-label="Đường dẫn">
-              <Link href="/" className="hover:text-[#405237]">Trang chủ</Link>
+            <nav className="mb-4 flex items-center justify-center gap-2 text-[10px] font-medium uppercase tracking-[0.12em] text-[#6f915a] sm:mb-7 sm:text-[11px] sm:tracking-[0.18em]" aria-label="Đường dẫn">
+              <Link href="/" className="inline-flex min-h-11 items-center hover:text-[#405237]">Trang chủ</Link>
               <span aria-hidden="true">/</span>
-              <Link href="/chuyen-nha" className="hover:text-[#405237]">Chuyện nhà Mombi</Link>
+              <Link href="/chuyen-nha" className="inline-flex min-h-11 items-center hover:text-[#405237]">Chuyện nhà Mombi</Link>
             </nav>
-            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.24em] text-[#789f5d]">Chăm sóc &amp; an yên</p>
-            <h1 className={`text-balance text-4xl leading-[1.15] text-[#293922] md:text-6xl lg:text-7xl ${playfair.className}`}>{article.title}</h1>
-            {article.excerpt && <p className="mx-auto mt-7 max-w-2xl text-base font-light leading-8 text-[#56664e] md:text-lg">{article.excerpt}</p>}
-            <div className="mt-8 flex items-center justify-center gap-3 text-xs text-[#718069]">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-[#789f5d] sm:mb-5 sm:tracking-[0.24em]">Chăm sóc &amp; an yên</p>
+            <h1 className={`text-balance text-[2.5rem] leading-[1.08] text-[#293922] sm:text-5xl md:text-6xl lg:text-7xl ${playfair.className}`}>{article.title}</h1>
+            {article.excerpt && <p className="mx-auto mt-5 max-w-2xl text-sm font-normal leading-7 text-[#56664e] sm:mt-7 sm:text-base sm:font-light sm:leading-8 md:text-lg">{article.excerpt}</p>}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] text-[#718069] sm:mt-8 sm:gap-3 sm:text-xs">
               <span className="grid h-9 w-9 place-items-center rounded-full bg-[#789f5d] font-serif text-base font-bold text-white">M</span>
               <span>Mombi Care Spa</span><span aria-hidden="true">•</span><time dateTime={article.date}>{formatPublishedDate(article.date)}</time>
             </div>
           </div>
         </header>
 
-        <article className="mx-auto -mt-12 mb-20 w-[calc(100%-2rem)] max-w-5xl overflow-hidden rounded-[1.75rem] border border-[#e3eadf] bg-white shadow-[0_24px_70px_rgba(49,67,39,0.09)] md:-mt-16 md:rounded-[2.5rem]">
+        <article className="mx-auto -mt-10 mb-14 w-[calc(100%-1rem)] max-w-5xl overflow-hidden rounded-[1.35rem] border border-[#e3eadf] bg-white shadow-[0_24px_70px_rgba(49,67,39,0.09)] sm:-mt-12 sm:mb-20 sm:w-[calc(100%-2rem)] sm:rounded-[1.75rem] md:-mt-16 md:rounded-[2.5rem]">
           {article.image && (
-            <div className="relative aspect-[16/9] w-full bg-[#e8efe3]">
+            <div className="relative aspect-[4/3] w-full bg-[#e8efe3] sm:aspect-[16/9]">
               <Image src={article.image} alt={article.imageAlt || article.title} fill sizes="(max-width: 1024px) 100vw, 1024px" className="object-cover" priority />
             </div>
           )}
-          <div className="mx-auto max-w-[760px] px-6 py-10 md:px-10 md:py-16">
+          <div className="mx-auto max-w-[760px] px-5 py-8 sm:px-6 sm:py-10 md:px-10 md:py-16">
             <ArticleBody value={article.body} />
             <div className="mt-14 border-t border-[#e6ece1] pt-8">
-              <Link href="/chuyen-nha" className="inline-flex items-center gap-2 text-sm font-semibold text-[#6f9555] transition hover:gap-3 hover:text-[#557a3c]">
+              <Link href="/chuyen-nha" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#6f9555] transition hover:gap-3 hover:text-[#557a3c]">
                 <span aria-hidden="true">←</span> Xem thêm Chuyện nhà Mombi
               </Link>
             </div>
           </div>
         </article>
 
-        <section className="mx-auto mb-20 w-[calc(100%-2rem)] max-w-5xl rounded-[1.75rem] bg-[#26351f] p-7 text-white md:p-10" aria-labelledby="related-content-title">
-          <div className="flex flex-col justify-between gap-6 border-b border-white/15 pb-8 md:flex-row md:items-end">
+        <section className="mx-auto mb-14 w-[calc(100%-1rem)] max-w-5xl overflow-hidden rounded-[1.35rem] bg-[#26351f] p-5 text-white sm:mb-20 sm:w-[calc(100%-2rem)] sm:rounded-[1.75rem] sm:p-7 md:p-10" aria-labelledby="related-content-title">
+          <div className="flex flex-col justify-between gap-5 border-b border-white/15 pb-6 sm:gap-6 sm:pb-8 md:flex-row md:items-end">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b7d3a4]">Tiếp tục khám phá</p>
-              <h2 id="related-content-title" className={`mt-3 text-3xl md:text-4xl ${playfair.className}`}>Chăm sóc phù hợp với bạn</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#b7d3a4] sm:text-[10px] sm:tracking-[0.22em]">Tiếp tục khám phá</p>
+              <h2 id="related-content-title" className={`mt-3 text-[1.75rem] leading-tight sm:text-3xl md:text-4xl ${playfair.className}`}>Chăm sóc phù hợp với bạn</h2>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Link href="/dich-vu/massage-thu-gian" className="rounded-full border border-white/25 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] transition hover:bg-white hover:text-[#26351f]">Massage thư giãn</Link>
-              <Link href="/dich-vu/cham-soc-da" className="rounded-full border border-white/25 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] transition hover:bg-white hover:text-[#26351f]">Chăm sóc da</Link>
+              <Link href="/dich-vu/massage-thu-gian" className="inline-flex min-h-11 items-center rounded-full border border-white/25 px-4 text-[11px] font-semibold uppercase tracking-[0.1em] transition hover:bg-white hover:text-[#26351f]">Massage thư giãn</Link>
+              <Link href="/dich-vu/cham-soc-da" className="inline-flex min-h-11 items-center rounded-full border border-white/25 px-4 text-[11px] font-semibold uppercase tracking-[0.1em] transition hover:bg-white hover:text-[#26351f]">Chăm sóc da</Link>
             </div>
           </div>
 
           {relatedArticles.length > 0 && (
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="no-scrollbar -mx-5 mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:-mx-7 sm:mt-8 sm:px-7 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0">
               {relatedArticles.map((relatedArticle) => (
-                <article key={relatedArticle._id} className="rounded-2xl bg-white/[0.07] p-5">
+                <article key={relatedArticle._id} className="min-w-[82vw] snap-center rounded-2xl bg-white/[0.07] p-4 sm:min-w-[70vw] sm:p-5 md:min-w-0">
                   <h3 className={`text-xl leading-snug ${playfair.className}`}>
                     <Link href={`/chuyen-nha/${relatedArticle.slug}`} className="transition hover:text-[#c7e4b3]">{relatedArticle.title}</Link>
                   </h3>
-                  {relatedArticle.excerpt && <p className="mt-3 line-clamp-3 text-sm font-light leading-6 text-white/60">{relatedArticle.excerpt}</p>}
-                  <Link href={`/chuyen-nha/${relatedArticle.slug}`} className="mt-5 inline-flex text-[10px] font-semibold uppercase tracking-[0.14em] text-[#b7d3a4]">Đọc tiếp <span className="ml-2" aria-hidden="true">→</span></Link>
+                  {relatedArticle.excerpt && <p className="mt-3 line-clamp-2 text-sm font-normal leading-6 text-white/65 sm:font-light">{relatedArticle.excerpt}</p>}
+                  <Link href={`/chuyen-nha/${relatedArticle.slug}`} className="mt-4 inline-flex min-h-11 items-center text-[11px] font-semibold uppercase tracking-[0.12em] text-[#b7d3a4] sm:mt-5">Đọc tiếp <span className="ml-2" aria-hidden="true">→</span></Link>
                 </article>
               ))}
             </div>
