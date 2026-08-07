@@ -28,22 +28,12 @@ type HomeArticle = {
 
 // NHẬN DỮ LIỆU TỪ SANITY THÔNG QUA PROPS
 export default function HomeClient({ cmsArticles }: { cmsArticles: HomeArticle[] }) {
-  const heroImages = [
-    "/img/landing-1.jpg",
-    "/img/landing-2.jpg",
-    "/img/landing-3.jpg"
-  ];
-  
   // ================= STATES & REFS =================
-  const [currentImg, setCurrentImg] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileServicesOpen, setIsMobileServicesOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const [showSplash, setShowSplash] = useState(true);
-  const [fadeSplash, setFadeSplash] = useState(false);
-  const [offsetY, setOffsetY] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
   const [hasClosedPopup, setHasClosedPopup] = useState(false);
 
@@ -56,26 +46,6 @@ export default function HomeClient({ cmsArticles }: { cmsArticles: HomeArticle[]
   const scrollRight = (ref: RefObject<HTMLDivElement | null>) => {
     if (ref.current) ref.current.scrollBy({ left: 350, behavior: 'smooth' });
   };
-
-  useEffect(() => {
-    const fadeTimer = setTimeout(() => setFadeSplash(true), 1500);
-    const hideTimer = setTimeout(() => setShowSplash(false), 2000);
-    const sliderTimer = setInterval(() => {
-      setCurrentImg((prev) => (prev + 1) % heroImages.length);
-    }, 5000); 
-
-    return () => { 
-      clearTimeout(fadeTimer); 
-      clearTimeout(hideTimer);
-      clearInterval(sliderTimer);
-    };
-  }, [heroImages.length]);
-
-  useEffect(() => {
-    const handleScroll = () => setOffsetY(window.pageYOffset);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     const popupTimer = setTimeout(() => {
@@ -125,72 +95,64 @@ export default function HomeClient({ cmsArticles }: { cmsArticles: HomeArticle[]
   return (
     <main className={`min-h-screen relative text-[#2d3d25] ${beVietnam.className}`}>
       
-      {showSplash && (
-        <div className={`fixed inset-0 z-[9999] bg-[#f6f9f2] flex items-center justify-center transition-opacity duration-500 ${fadeSplash ? "opacity-0" : "opacity-100"}`}>
-          <div className="flex flex-col items-center animate-pulse">
-            <div className="relative w-48 h-20 opacity-80 mix-blend-multiply">
-              <Image src="/img/logo-mombicare.jpg" alt="Mombi Care Spa Loading..." fill sizes="(max-width: 768px) 192px, 192px" priority className="object-contain" />
-            </div>
-            <p className={`mt-4 tracking-[0.3em] text-[#8bb96e] text-xs uppercase ${playfair.className}`}>Tìm về nhịp nghỉ vừa vặn</p>
-          </div>
-        </div>
-      )}
-
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
+        @keyframes heroReveal { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes heroZoom { from { transform: scale(1.04); } to { transform: scale(1); } }
         .animate-blob { animation: blob 10s infinite alternate; }
         .animation-delay-2000 { animation-delay: 2s; }
         .animation-delay-4000 { animation-delay: 4s; }
+        .hero-reveal { animation: heroReveal .9s cubic-bezier(.2,.75,.25,1) both; }
+        .hero-reveal-delay { animation: heroReveal .9s .18s cubic-bezier(.2,.75,.25,1) both; }
+        .hero-reveal-late { animation: heroReveal .9s .34s cubic-bezier(.2,.75,.25,1) both; }
+        .hero-image { animation: heroZoom 14s cubic-bezier(.2,.7,.2,1) both; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        @media (prefers-reduced-motion: reduce) { .hero-reveal, .hero-reveal-delay, .hero-reveal-late, .hero-image { animation: none; } }
       `}} />
 
-      <section className="relative h-[80vh] w-full flex items-center justify-center text-white overflow-hidden bg-[#455c34]">
-        <div className="absolute inset-0 w-full h-[120%] -top-[10%] z-0 pointer-events-none" style={{ transform: `translateY(${offsetY * 0.4}px)` }}>
-          {heroImages.map((src, index) => (
-            <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentImg ? "opacity-100" : "opacity-0"}`}>
-              <div className="absolute inset-0 bg-[#2d3d25]/40 z-10"></div> 
-              <Image src={src} alt={`Mombi Care Spa Banner ${index + 1}`} fill className="object-cover" priority={index === 0} />
-            </div>
-          ))}
+      <section className="relative flex min-h-[820px] w-full items-center overflow-hidden bg-[#1d2b1a] text-white md:h-[100svh] md:max-h-[980px] md:min-h-[760px]">
+        <div className="absolute inset-0 pointer-events-none">
+          <Image src="/img/landing-1.jpg" alt="Không gian xanh và sự chăm sóc tận tâm tại Mombi Care Spa" fill priority sizes="100vw" className="hero-image object-cover object-[52%_63%] md:object-[center_62%]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#142014]/95 via-[#1b2919]/68 to-[#172115]/12" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#10190f]/90 via-transparent to-[#10190f]/35" />
+          <div className="absolute inset-0 opacity-[0.16]" style={{backgroundImage: 'radial-gradient(circle at 72% 38%, rgba(223,244,206,.9) 0, transparent 31%)'}} />
         </div>
         
-        <header className="absolute top-0 w-full z-50 flex justify-between items-center px-4 py-4 md:px-16 md:py-6 text-[11px] md:text-[13px] uppercase tracking-[0.15em] font-medium border-b border-white/10">
-          <div className="flex-1 flex justify-start">
-            <Link href="/">
-              <div className="relative w-28 h-10 md:w-40 md:h-14 cursor-pointer hover:opacity-80 transition-opacity filter drop-shadow-md">
-                <Image src="/img/logo-mombicare.jpg" alt="Mombi Care Spa Logo" fill sizes="(max-width: 768px) 112px, 160px" priority className="object-contain object-left" />
-              </div>
+        <header className="absolute inset-x-0 top-0 z-50 border-b border-white/15">
+          <div className="mx-auto flex h-[82px] max-w-[1380px] items-center justify-between px-5 md:h-[96px] md:px-10">
+            <Link href="/" className="flex items-center gap-3" aria-label="Mombi Care Spa - Trang chủ">
+              <span className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/20 shadow-lg md:h-14 md:w-14">
+                <Image src="/img/logo-mombicare.jpg" alt="Mombi Care Spa" fill sizes="56px" priority className="object-cover" />
+              </span>
+              <span className="hidden text-[10px] font-semibold uppercase leading-4 tracking-[0.22em] text-white/85 sm:block">Mombi Care<br />Spa</span>
             </Link>
-          </div>
           
-          <nav className="hidden xl:flex gap-8 justify-center items-center">
-            <Link href="/" className="hover:text-[#8bb96e] transition-colors">Trang chủ</Link>
+            <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.16em] lg:flex">
+            <Link href="/" className="text-[#c7e4b3]">Trang chủ</Link>
             <div className="relative py-2" onMouseEnter={() => setIsDropdownOpen(true)} onMouseLeave={() => setIsDropdownOpen(false)}>
-              <Link href="/dich-vu" className={`transition-colors pb-1 ${isDropdownOpen ? 'text-[#8bb96e]' : 'hover:text-[#8bb96e]'}`}>Dịch vụ</Link>
+              <Link href="/dich-vu" className={`transition-colors ${isDropdownOpen ? 'text-[#c7e4b3]' : 'hover:text-[#c7e4b3]'}`}>Dịch vụ</Link>
               <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 w-56 transition-all duration-300 z-50 ${isDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
-                <div className="bg-white rounded-xl shadow-2xl shadow-[#8bb96e]/10 border border-[#e4edd9] flex flex-col py-2 overflow-hidden text-[#5c6e51]">
+                <div className="flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#f9faf7] py-2 text-[#526348] shadow-2xl">
                   <Link href="/dich-vu/cham-soc-da" className="px-6 py-3 text-left text-[10px] tracking-widest hover:text-[#8bb96e] hover:bg-[#f6f9f2] transition-colors">CHĂM SÓC DA CAO CẤP</Link>
                   <Link href="/dich-vu/massage-thu-gian" className="px-6 py-3 text-left text-[10px] tracking-widest hover:text-[#8bb96e] hover:bg-[#f6f9f2] transition-colors">THƯ GIÃN & MASSAGE</Link>
                 </div>
               </div>
             </div>
-            <Link href="#ve-mombi" className="hover:text-[#8bb96e] transition-colors">Về Mombi</Link>
-            <Link href="#chuyen-nha" className="hover:text-[#8bb96e] transition-colors">Chuyện nhà Mombi</Link>
-            <Link href="/phieu-qua-tang" className="hover:text-[#8bb96e] transition-colors">Phiếu quà tặng</Link>
+            <Link href="#ve-mombi" className="transition-colors hover:text-[#c7e4b3]">Về Mombi</Link>
+            <Link href="#chuyen-nha" className="transition-colors hover:text-[#c7e4b3]">Chuyện nhà Mombi</Link>
+            <Link href="/phieu-qua-tang" className="transition-colors hover:text-[#c7e4b3]">Phiếu quà tặng</Link>
           </nav>
 
-          <div className="flex-1 flex justify-end items-center gap-4">
-            <div className="hidden md:flex items-center gap-1 cursor-pointer hover:text-[#8bb96e] transition-colors">
-              <span>VI</span>
-              <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </div>
-            <button className="xl:hidden p-2 text-white hover:text-[#8bb96e] transition-colors" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <div className="flex items-center gap-3">
+              <a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="hidden rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] backdrop-blur-md transition hover:bg-white hover:text-[#24341f] sm:inline-flex">Đặt lịch</a>
+              <button className="rounded-full border border-white/20 bg-white/10 p-2.5 text-white backdrop-blur-md transition hover:bg-white/20 lg:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label={isMobileMenuOpen ? 'Đóng menu' : 'Mở menu'}>
               <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{isMobileMenuOpen ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M4 6h16M4 12h16M4 18h16" />}</svg>
-            </button>
+              </button>
+            </div>
           </div>
         </header>
 
-        <div className={`xl:hidden absolute top-[73px] md:top-[89px] left-0 w-full bg-white border-b border-[#e4edd9] shadow-2xl transition-all duration-300 ease-in-out z-40 overflow-hidden ${isMobileMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className={`lg:hidden absolute top-[82px] md:top-[96px] left-0 w-full bg-white border-b border-[#e4edd9] shadow-2xl transition-all duration-300 ease-in-out z-40 overflow-hidden ${isMobileMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <nav className="flex flex-col py-4 px-6 text-xs uppercase tracking-widest text-[#5c6e51]">
             <Link href="/" className="py-4 border-b border-[#f6f9f2] hover:text-[#8bb96e]" onClick={() => setIsMobileMenuOpen(false)}>Trang chủ</Link>
             <div className="flex flex-col border-b border-[#f6f9f2]">
@@ -209,27 +171,44 @@ export default function HomeClient({ cmsArticles }: { cmsArticles: HomeArticle[]
           </nav>
         </div>
 
-        <div className="z-20 text-center px-4 pt-10">
-          <ScrollAnimation>
-            <h2 className={`text-4xl md:text-6xl lg:text-7xl mb-2 md:mb-4 font-normal drop-shadow-md ${playfair.className}`}>Đến Mombi, tìm về</h2>
-            <h2 className={`text-4xl md:text-6xl lg:text-7xl mb-8 md:mb-12 font-normal drop-shadow-md ${playfair.className}`}>một nhịp nghỉ vừa vặn</h2>
-          </ScrollAnimation>
-          <ScrollAnimation delay={0.2}>
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center px-4">
-              <a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto text-center bg-[#8bb96e] text-white rounded-full px-8 md:px-10 py-3 md:py-3.5 text-xs md:text-sm tracking-wider hover:bg-[#739f55] transition-all shadow-lg hover:-translate-y-1">
-                ĐẶT LỊCH VỚI MOMBI
-              </a>
-              <Link href="/phieu-qua-tang" className="w-full sm:w-auto text-center border border-white text-white rounded-full px-8 md:px-10 py-3 md:py-3.5 text-xs md:text-sm tracking-wider hover:bg-white hover:text-[#2d3d25] transition-all">
-                PHIẾU QUÀ TẶNG
-              </Link>
+        <div className="relative z-20 mx-auto w-full max-w-[1380px] px-5 pb-40 pt-32 md:px-10 md:pb-44 md:pt-40">
+          <div className="max-w-4xl">
+            <div className="hero-reveal mb-6 flex items-center gap-4">
+              <span className="h-px w-10 bg-[#b9dba3]" />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#c7e4b3] md:text-[11px]">Spa thư giãn tại Buôn Ma Thuột</p>
             </div>
-          </ScrollAnimation>
+            <h1 className={`hero-reveal-delay text-[3.35rem] font-normal leading-[0.98] tracking-[-0.035em] drop-shadow-lg sm:hidden ${playfair.className}`}>
+              Đến Mombi,<br />tìm về một<br />nhịp nghỉ <span className="italic text-[#c9e7b4]">vừa vặn.</span>
+            </h1>
+            <h1 className={`hero-reveal-delay hidden max-w-4xl font-normal leading-[0.98] tracking-[-0.035em] drop-shadow-lg sm:block sm:text-6xl md:text-7xl lg:text-[5.5rem] ${playfair.className}`}>
+              Đến Mombi, tìm về<br />một nhịp nghỉ <span className="italic text-[#c9e7b4]">vừa vặn.</span>
+            </h1>
+            <div className="hero-reveal-late mt-7 max-w-xl border-l border-white/35 pl-5 md:mt-9">
+              <p className="text-sm font-light leading-7 text-white/82 md:text-base md:leading-8">Một không gian xanh giữa lòng thành phố, nơi cơ thể được thả lỏng và làn da được chăm sóc bằng sự tận tâm — cả ngày lẫn đêm.</p>
+            </div>
+            <div className="hero-reveal-late mt-8 flex flex-col gap-3 sm:flex-row md:mt-10">
+              <a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 rounded-full bg-[#91bd72] px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#172313] shadow-[0_14px_40px_rgba(112,160,78,.3)] transition hover:-translate-y-0.5 hover:bg-[#a7d386]">Đặt lịch với Mombi <span aria-hidden="true">→</span></a>
+              <Link href="/dich-vu" className="inline-flex items-center justify-center rounded-full border border-white/35 bg-white/5 px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-sm transition hover:bg-white hover:text-[#24341f]">Khám phá dịch vụ</Link>
+            </div>
+          </div>
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-          {heroImages.map((_, idx) => (
-            <button key={idx} onClick={() => setCurrentImg(idx)} className={`w-2 h-2 rounded-full transition-colors ${idx === currentImg ? 'bg-[#8bb96e]' : 'bg-white/50'}`} />
-          ))}
+        <div className="absolute inset-x-0 bottom-0 z-30 border-t border-white/15 bg-[#142013]/50 backdrop-blur-md">
+          <div className="mx-auto grid max-w-[1380px] grid-cols-2 divide-x divide-white/15 px-5 md:grid-cols-[1fr_1fr_1fr_auto] md:px-10">
+            <div className="py-5 pr-4 md:py-6 md:pr-8">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#b9dba3]">Thời gian</p>
+              <p className="mt-1.5 text-xs text-white/90 md:text-sm">Phục vụ cả ngày & đêm</p>
+            </div>
+            <div className="py-5 pl-4 md:px-8 md:py-6">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#b9dba3]">Địa chỉ</p>
+              <p className="mt-1.5 text-xs text-white/90 md:text-sm">34 Trần Khánh Dư</p>
+            </div>
+            <div className="hidden px-8 py-6 md:block">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#b9dba3]">Trải nghiệm</p>
+              <p className="mt-1.5 text-sm text-white/90">Massage · Chăm sóc da</p>
+            </div>
+            <a href="tel:0934250909" className="hidden items-center gap-3 py-6 pl-8 text-sm font-medium text-white transition hover:text-[#c7e4b3] md:flex"><span className="grid h-9 w-9 place-items-center rounded-full border border-white/25">↗</span> 0934 250 909</a>
+          </div>
         </div>
       </section>
 
