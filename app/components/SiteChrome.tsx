@@ -8,6 +8,8 @@ const navItems = [
   { href: "/", label: "Trang chủ" },
   { href: "/#ve-mombi", label: "Về Mombi" },
   { href: "/dich-vu", label: "Dịch vụ" },
+  { href: "/spa-buon-ma-thuot", label: "Spa BMT" },
+  { href: "/uu-dai-su-kien", label: "Dịp lễ" },
   { href: "/chuyen-nha", label: "Chuyện nhà Mombi" },
 ];
 
@@ -23,7 +25,7 @@ export function SiteHeader() {
           </span>
           <span className="hidden text-[10px] font-semibold uppercase leading-4 tracking-[0.16em] text-[#42543a] min-[370px]:block sm:text-[11px]">Mombi Care<br />Spa</span>
         </Link>
-        <nav className="hidden items-center gap-7 text-[12px] font-medium uppercase tracking-[0.12em] text-[#526348] lg:flex" aria-label="Điều hướng chính">
+        <nav className="hidden items-center gap-5 text-[11px] font-medium uppercase tracking-[0.07em] text-[#526348] lg:flex" aria-label="Điều hướng chính">
           {navItems.map((item) => (
             <Link key={item.href} href={item.href} className="transition-colors hover:text-[#7da961]">
               {item.label}
@@ -76,6 +78,8 @@ export function SiteFooter() {
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-white">Khám phá</p>
           <div className="flex flex-col gap-3 text-sm">
             <Link href="/chuyen-nha" className="inline-flex min-h-11 items-center hover:text-white">Chuyện nhà Mombi</Link>
+            <Link href="/spa-buon-ma-thuot" className="inline-flex min-h-11 items-center hover:text-white">Spa Buôn Ma Thuột</Link>
+            <Link href="/uu-dai-su-kien" className="inline-flex min-h-11 items-center hover:text-white">Dịp lễ & sự kiện</Link>
             <Link href="/dich-vu/cham-soc-da" className="inline-flex min-h-11 items-center hover:text-white">Chăm sóc da</Link>
             <Link href="/dich-vu/massage-thu-gian" className="inline-flex min-h-11 items-center hover:text-white">Massage thư giãn</Link>
           </div>
@@ -83,7 +87,7 @@ export function SiteFooter() {
         <div className="border-t border-white/10 pt-6 sm:border-0 sm:pt-0">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-white">Liên hệ</p>
           <div className="space-y-3 text-sm font-light leading-6">
-            <p>34 Trần Khánh Dư, TP. Buôn Ma Thuột</p>
+            <a className="block hover:text-white" href="https://www.google.com/maps/search/?api=1&query=Mombi+Care+Spa+34+Tran+Khanh+Du+Buon+Ma+Thuot" target="_blank" rel="noopener noreferrer">34 Trần Khánh Dư, TP. Buôn Ma Thuột</a>
             <a className="flex min-h-11 items-center hover:text-white" href="tel:0934250909">0934 250 909</a>
             <a className="flex min-h-11 items-center break-all hover:text-white" href="mailto:mombicarespa@gmail.com">mombicarespa@gmail.com</a>
           </div>

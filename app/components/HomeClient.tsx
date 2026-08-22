@@ -113,7 +113,7 @@ export default function HomeClient({cmsArticles}: {cmsArticles: HomeArticle[]}) 
               <span className="hidden text-[9px] font-semibold uppercase leading-4 tracking-[0.16em] text-white/85 min-[370px]:block sm:text-[10px] sm:tracking-[0.22em]">Mombi Care<br />Spa</span>
             </Link>
 
-            <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.16em] lg:flex" aria-label="Điều hướng chính">
+            <nav className="hidden items-center gap-5 text-[10px] font-semibold uppercase tracking-[0.08em] lg:flex xl:text-[11px]" aria-label="Điều hướng chính">
               <Link href="/" className="text-[#c7e4b3]">Trang chủ</Link>
               <div className="relative py-2" onMouseEnter={() => setIsDropdownOpen(true)} onMouseLeave={() => setIsDropdownOpen(false)}>
                 <Link href="/dich-vu" className={`transition-colors ${isDropdownOpen ? "text-[#c7e4b3]" : "hover:text-[#c7e4b3]"}`}>Dịch vụ</Link>
@@ -125,6 +125,8 @@ export default function HomeClient({cmsArticles}: {cmsArticles: HomeArticle[]}) 
                 </div>
               </div>
               <Link href="#ve-mombi" className="transition-colors hover:text-[#c7e4b3]">Về Mombi</Link>
+              <Link href="/spa-buon-ma-thuot" className="transition-colors hover:text-[#c7e4b3]">Spa BMT</Link>
+              <Link href="/uu-dai-su-kien" className="transition-colors hover:text-[#c7e4b3]">Dịp lễ</Link>
               <Link href="/chuyen-nha" className="transition-colors hover:text-[#c7e4b3]">Chuyện nhà Mombi</Link>
               <Link href="#lien-he" className="transition-colors hover:text-[#c7e4b3]">Liên hệ</Link>
             </nav>
@@ -152,6 +154,8 @@ export default function HomeClient({cmsArticles}: {cmsArticles: HomeArticle[]}) 
               </div>
             </div>
             <Link href="#ve-mombi" className="border-b border-[#edf2e9] py-4" onClick={() => setIsMobileMenuOpen(false)}>Về Mombi</Link>
+            <Link href="/spa-buon-ma-thuot" className="border-b border-[#edf2e9] py-4" onClick={() => setIsMobileMenuOpen(false)}>Spa Buôn Ma Thuột</Link>
+            <Link href="/uu-dai-su-kien" className="border-b border-[#edf2e9] py-4" onClick={() => setIsMobileMenuOpen(false)}>Dịp lễ & sự kiện</Link>
             <Link href="/chuyen-nha" className="border-b border-[#edf2e9] py-4" onClick={() => setIsMobileMenuOpen(false)}>Chuyện nhà Mombi</Link>
             <Link href="#lien-he" className="py-4" onClick={() => setIsMobileMenuOpen(false)}>Liên hệ</Link>
           </nav>

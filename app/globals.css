@@ -9,7 +9,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), Arial, Helvetica, sans-serif;
+  --font-sans: var(--font-be-vietnam), "Segoe UI", sans-serif;
   --font-serif: var(--font-playfair), Georgia, "Times New Roman", serif;
 }
 
@@ -25,9 +25,19 @@ body {
   overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  font-family: var(--font-be-vietnam), "Segoe UI", sans-serif;
+  font-synthesis: none;
+  letter-spacing: -0.01em;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-serif {
+  letter-spacing: -0.025em;
 }
 
 button,

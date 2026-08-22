@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-inter",
+const beVietnam = Be_Vietnam_Pro({
+  subsets: ["vietnamese"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-be-vietnam",
+  display: "swap",
 });
 
 const playfair = Playfair_Display({
-  subsets: ["latin", "vietnamese"],
+  subsets: ["vietnamese"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-playfair",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -53,24 +57,48 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <body className={`${inter.variable} ${playfair.variable} bg-[#f9f8f4] text-gray-800`}>
+      <body className={`${beVietnam.variable} ${playfair.variable} bg-[#f9f8f4] text-gray-800`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
-              '@type': 'HealthAndBeautyBusiness',
+              '@type': ['DaySpa', 'HealthAndBeautyBusiness'],
               '@id': 'https://www.mombicarespa.com/#business',
               name: 'Mombi Care Spa',
+              alternateName: ['Mombi Care', 'Mombicare Spa'],
+              description: 'Spa massage, gội đầu dưỡng sinh và chăm sóc da tại 34 Trần Khánh Dư, Buôn Ma Thuột.',
               url: 'https://www.mombicarespa.com/',
               logo: 'https://www.mombicarespa.com/icon.png',
-              image: 'https://www.mombicarespa.com/img/landing-1.jpg',
+              image: [
+                'https://www.mombicarespa.com/img/landing-1.jpg',
+                'https://www.mombicarespa.com/img/ve-mombi1.jpg',
+                'https://www.mombicarespa.com/img/ve-mombi2.jpg',
+              ],
               telephone: '+84934250909',
+              email: 'mombicarespa@gmail.com',
+              priceRange: '50.000đ–490.000đ',
+              areaServed: {'@type': 'City', name: 'Buôn Ma Thuột'},
+              geo: {
+                '@type': 'GeoCoordinates',
+                latitude: 12.68557249339919,
+                longitude: 108.04502350853478,
+              },
               address: {
                 '@type': 'PostalAddress',
-                streetAddress: '34 Trần Khánh Dư',
+                streetAddress: '34 Trần Khánh Dư, phường Tân Lợi',
                 addressLocality: 'Buôn Ma Thuột',
+                addressRegion: 'Đắk Lắk',
                 addressCountry: 'VN',
+              },
+              hasMap: 'https://www.google.com/maps/search/?api=1&query=Mombi+Care+Spa+34+Tran+Khanh+Du+Buon+Ma+Thuot',
+              hasOfferCatalog: {
+                '@type': 'OfferCatalog',
+                name: 'Dịch vụ Mombi Care Spa',
+                itemListElement: [
+                  { '@type': 'OfferCatalog', name: 'Massage & thư giãn', url: 'https://www.mombicarespa.com/dich-vu/massage-thu-gian' },
+                  { '@type': 'OfferCatalog', name: 'Chăm sóc da', url: 'https://www.mombicarespa.com/dich-vu/cham-soc-da' },
+                ],
               },
             }),
           }}
