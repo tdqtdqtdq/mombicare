@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# Private handover notes. Never publish account passwords to GitHub.
+docs/HUONG-DAN-BAN-GIAO-BAO-MAT.md
 
 # vercel
 .vercel

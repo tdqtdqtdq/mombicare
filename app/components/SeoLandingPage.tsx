@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type {EventLanding, SeoLanding} from "../lib/seo-content";
 import {eventLandings, localLandings} from "../lib/seo-content";
-import {SiteFooter, SiteHeader} from "./SiteChrome";
+import {SiteFooter, SiteHeader, LuxuryFloatingConcierge} from "./SiteChrome";
 
 const siteUrl = "https://www.mombicarespa.com";
 
@@ -74,37 +74,51 @@ export function SeoLandingPage({
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f6f1] text-[#2d3d25]">
+    <div className="min-h-screen bg-[#faf8f5] text-[#1c2619]">
       <JsonLd data={breadcrumbData} />
       <JsonLd data={faqData} />
       <JsonLd data={serviceData} />
       <SiteHeader />
       <main>
-        <section className="border-b border-[#dfe8d9] bg-[#edf3e8] px-5 py-14 md:py-20">
+        {/* Luxury Hero Header */}
+        <section className="relative overflow-hidden border-b border-[#dce7d6] bg-[#edf4e8] px-5 py-16 md:py-24">
+          <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[#6f9556]/15 blur-3xl" />
           <div className="mx-auto max-w-6xl">
-            <nav aria-label="Đường dẫn" className="mb-7 flex flex-wrap items-center gap-2 text-xs text-[#668451]">
+            <nav aria-label="Đường dẫn" className="mb-6 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#6f9556]">
               <Link href="/" className="hover:underline">Trang chủ</Link>
               <span aria-hidden="true">/</span>
               <Link href={basePath} className="hover:underline">{hubLabel}</Link>
               <span aria-hidden="true">/</span>
-              <span aria-current="page">{page.title}</span>
+              <span className="text-[#22331d]" aria-current="page">{page.title}</span>
             </nav>
             <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_.95fr]">
               <div>
-                <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-[#789f5d]">{page.eyebrow}</p>
+                <p className="mb-3 text-xs font-bold uppercase tracking-[0.28em] text-[#6f9556]">{page.eyebrow}</p>
                 {event && (
-                  <time dateTime={event.dateISO} className="mb-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#668451] shadow-sm">
-                    {event.dateLabel}
+                  <time dateTime={event.dateISO} className="mb-4 inline-flex rounded-full bg-white px-4 py-1.5 text-xs font-bold text-[#6f9556] shadow-sm">
+                    ⏱ {event.dateLabel}
                   </time>
                 )}
-                <h1 className="font-serif text-4xl leading-tight text-[#293922] md:text-6xl">{page.title}</h1>
-                <p className="mt-6 max-w-2xl text-base font-normal leading-7 text-[#52624b] md:text-lg md:leading-8">{page.intent}</p>
+                <h1 className="font-serif text-[2.5rem] font-normal leading-[1.06] text-[#1c2619] md:text-5xl lg:text-6xl">{page.title}</h1>
+                <p className="mt-6 max-w-2xl text-sm font-light leading-7 text-[#55694f] md:text-base md:leading-8">{page.intent}</p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="rounded-full bg-[#789f5d] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#64894b]">Đặt lịch qua Zalo</a>
-                  <Link href={page.serviceHref} className="rounded-full border border-[#789f5d] bg-white px-6 py-3 text-sm font-semibold text-[#64894b] transition hover:bg-[#f5f9f2]">{page.serviceLabel}</Link>
+                  <a 
+                    href="https://zalo.me/0934250909" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#24361e] px-7 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-md transition hover:bg-[#385130]"
+                  >
+                    Đặt lịch qua Zalo →
+                  </a>
+                  <Link 
+                    href={page.serviceHref} 
+                    className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#b8cdb0] bg-white px-6 text-xs font-bold uppercase tracking-[0.14em] text-[#24361e] transition hover:bg-[#edf4e8]"
+                  >
+                    {page.serviceLabel}
+                  </Link>
                 </div>
               </div>
-              <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] bg-[#dfe9d8] shadow-[0_24px_60px_rgba(45,61,37,0.13)]">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[2.5rem] bg-[#dfe9d8] shadow-[0_24px_60px_rgba(28,40,24,0.1)]">
                 <Image src={page.image} alt={page.imageAlt} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" priority />
               </div>
             </div>
@@ -112,71 +126,107 @@ export function SeoLandingPage({
         </section>
 
         {event && (
-          <section className="border-b border-[#e1e8dc] bg-white px-5 py-6">
-            <p className="mx-auto max-w-4xl text-center text-sm leading-7 text-[#5e6c58]"><strong className="text-[#3e5134]">Lưu ý khi lên lịch:</strong> {event.planningNote}</p>
+          <section className="border-b border-[#e1e8dc] bg-[#fffbf2] px-5 py-4">
+            <p className="mx-auto max-w-4xl text-center text-xs font-medium text-[#7a5e28]">
+              <strong>Lưu ý khi lên lịch:</strong> {event.planningNote}
+            </p>
           </section>
         )}
 
-        <article className="mx-auto max-w-4xl px-5 py-14 md:py-20">
-          <p className="text-lg leading-8 text-[#4f6048]">{page.description}</p>
-          <div className="mt-12 space-y-12">
+        <article className="mx-auto max-w-4xl px-5 py-16 md:py-24">
+          <p className="text-base font-light leading-8 text-[#465741] sm:text-lg">{page.description}</p>
+          
+          <div className="mt-14 space-y-14">
             {page.sections.map((section) => (
               <section key={section.heading}>
-                <h2 className="font-serif text-3xl text-[#2d3d25] md:text-4xl">{section.heading}</h2>
-                <div className="mt-5 space-y-4 text-base font-normal leading-7 text-[#596853] md:leading-8">
+                <h2 className="font-serif text-2xl font-normal text-[#1c2619] sm:text-3xl md:text-4xl">{section.heading}</h2>
+                <div className="mt-5 space-y-4 text-sm font-light leading-7 text-[#55694f] sm:text-base sm:leading-8">
                   {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                 </div>
                 {section.bullets && (
                   <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-                    {section.bullets.map((bullet) => <li key={bullet} className="rounded-2xl border border-[#e0e8db] bg-white px-5 py-4 text-sm leading-6 text-[#52624b]">✓ {bullet}</li>)}
+                    {section.bullets.map((bullet) => (
+                      <li key={bullet} className="rounded-2xl border border-[#dce7d6] bg-white p-4 text-xs font-normal leading-6 text-[#465741] shadow-xs">
+                        <span className="font-bold text-[#6f9556]">✓ </span>{bullet}
+                      </li>
+                    ))}
                   </ul>
                 )}
               </section>
             ))}
           </div>
 
-          <section className="mt-16 rounded-[2rem] bg-[#edf3e8] p-6 md:p-9">
-            <h2 className="font-serif text-3xl text-[#2d3d25]">Câu hỏi thường gặp</h2>
-            <div className="mt-6 divide-y divide-[#cfddc7]">
+          {/* FAQs section */}
+          <section className="mt-20 rounded-[2.5rem] border border-[#dce7d6] bg-[#edf4e8] p-8 sm:p-12">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#6f9556]">Giải đáp thắc mắc</p>
+            <h2 className="mt-2 font-serif text-2xl font-normal text-[#1c2619] sm:text-3xl">Câu hỏi thường gặp</h2>
+            <div className="mt-8 space-y-4">
               {page.faqs.map((faq) => (
-                <details key={faq.question} className="group py-5">
-                  <summary className="cursor-pointer list-none pr-8 font-semibold text-[#405237] marker:content-none">{faq.question}</summary>
-                  <p className="mt-3 text-sm font-light leading-7 text-[#596853]">{faq.answer}</p>
+                <details key={faq.question} className="group rounded-2xl border border-[#d2dfcb] bg-white p-5 transition hover:border-[#b8cdb0]">
+                  <summary className="flex cursor-pointer list-none items-center justify-between font-serif text-base font-normal text-[#1c2619]">
+                    <span>{faq.question}</span>
+                    <span className="ml-4 font-sans text-lg font-light text-[#6f9556] transition-transform duration-200 group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-4 border-t border-[#eef4ea] pt-3 text-xs font-light leading-6 text-[#586c52] sm:text-sm">
+                    {faq.answer}
+                  </p>
                 </details>
               ))}
             </div>
           </section>
         </article>
 
-        <section className="bg-[#26351f] px-5 py-14 text-white">
+        {/* CTA Banner */}
+        <section className="bg-[#182515] px-5 py-16 text-white sm:py-24">
           <div className="mx-auto max-w-4xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b9d5a7]">Mombi Care Spa · Buôn Ma Thuột</p>
-            <h2 className="mt-4 font-serif text-3xl md:text-5xl">Giữ một khung giờ cho riêng bạn</h2>
-            <p className="mx-auto mt-5 max-w-2xl text-sm font-light leading-7 text-[#d6e3ce]">34 Trần Khánh Dư, phường Tân Lợi · 0934 250 909. Hãy liên hệ trước để xác nhận dịch vụ, giá và khung giờ còn trống.</p>
-            <a href="https://zalo.me/0934250909" target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex rounded-full bg-[#8bb96e] px-7 py-3 text-sm font-semibold text-white hover:bg-[#76a459]">Nhắn Mombi trên Zalo</a>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#a9c994]">Mombi Care Spa · Buôn Ma Thuột</p>
+            <h2 className="mt-3 font-serif text-3xl font-normal text-white sm:text-4xl md:text-5xl">Giữ một khung giờ cho riêng bạn</h2>
+            <p className="mx-auto mt-5 max-w-2xl text-xs font-light leading-7 text-[#b7cbb7] sm:text-sm">
+              34 Trần Khánh Dư, phường Tân Lợi · Hotline 0934 250 909. Hãy liên hệ trước để xác nhận dịch vụ và khung giờ phục vụ cả ngày lẫn đêm.
+            </p>
+            <a 
+              href="https://zalo.me/0934250909" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-[#6f9556] px-8 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition hover:bg-[#80aa64]"
+            >
+              Nhắn Mombi qua Zalo →
+            </a>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-5 py-14 md:py-20">
-          <div className="mb-8 flex items-end justify-between gap-4">
+        {/* Related Pages */}
+        <section className="mx-auto max-w-7xl px-5 py-16 md:py-24">
+          <div className="mb-10 flex items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#789f5d]">Khám phá thêm</p>
-              <h2 className="mt-2 font-serif text-3xl text-[#2d3d25]">Nội dung liên quan</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#6f9556]">Khám phá thêm</p>
+              <h2 className="mt-2 font-serif text-3xl font-normal text-[#1c2619]">Nội dung liên quan</h2>
             </div>
-            <Link href={basePath} className="text-sm font-semibold text-[#668b4e] hover:underline">Xem tất cả →</Link>
+            <Link href={basePath} className="text-xs font-bold uppercase tracking-wider text-[#6f9556] hover:underline">
+              Xem tất cả →
+            </Link>
           </div>
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             {related.map((item) => (
-              <Link key={item.slug} href={`${basePath}/${item.slug}`} className="rounded-3xl border border-[#e0e7dc] bg-white p-6 transition hover:-translate-y-1 hover:shadow-lg">
-                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#7b9e65]">{item.eyebrow}</p>
-                <h3 className="mt-3 font-serif text-2xl text-[#33452a]">{item.title}</h3>
-                <p className="mt-3 line-clamp-3 text-sm font-light leading-6 text-[#61705a]">{item.description}</p>
+              <Link 
+                key={item.slug} 
+                href={`${basePath}/${item.slug}`} 
+                className="flex flex-col justify-between rounded-[2rem] border border-[#dce7d6] bg-white p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#b8cdb0] hover:shadow-lg"
+              >
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#6f9556]">{item.eyebrow}</p>
+                  <h3 className="mt-3 font-serif text-xl font-normal text-[#1c2619]">{item.title}</h3>
+                  <p className="mt-3 line-clamp-3 text-xs font-light leading-6 text-[#586c52]">{item.description}</p>
+                </div>
+                <span className="mt-5 inline-block text-xs font-bold text-[#6f9556]">Xem chi tiết →</span>
               </Link>
             ))}
           </div>
         </section>
       </main>
+      <LuxuryFloatingConcierge />
       <SiteFooter />
     </div>
   );
 }
+

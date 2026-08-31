@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf8f5;
+  --foreground: #1c2619;
+  --color-moss-deep: #182515;
+  --color-moss-rich: #22331d;
+  --color-moss-medium: #3b5232;
+  --color-moss-accent: #6f9556;
+  --color-moss-light: #edf4e8;
+  --color-gold-accent: #c6a35d;
+  --color-gold-light: #f7f1e3;
+  --color-sand: #f4efe6;
   color-scheme: light;
 }
 
@@ -17,40 +25,112 @@ html {
   min-width: 320px;
   overflow-x: hidden;
   scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
+  scroll-padding-top: 5.5rem;
 }
 
 body {
   min-width: 320px;
   overflow-x: hidden;
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-be-vietnam), "Segoe UI", sans-serif;
   font-synthesis: none;
   letter-spacing: -0.01em;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1,
-h2,
-h3,
-h4,
-.font-serif {
+/* Subtle Film Grain Texture Overlay */
+.bg-grain {
+  background-image: radial-gradient(rgba(35, 50, 30, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Luxury Glassmorphism Utilities */
+.glass-header {
+  background: rgba(253, 252, 248, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(219, 230, 212, 0.7);
+}
+
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(225, 235, 220, 0.8);
+}
+
+.glass-card-dark {
+  background: rgba(27, 40, 24, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Typography refinement */
+h1, h2, h3, h4, .font-serif {
   letter-spacing: -0.025em;
 }
 
-button,
-a {
-  -webkit-tap-highlight-color: transparent;
+.text-balance {
+  text-wrap: balance;
 }
 
+/* Soft gold shimmer for special tags */
+.gold-shimmer {
+  background: linear-gradient(135deg, #c8a462 0%, #e6d3a3 50%, #b8934d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-badge {
+  background: linear-gradient(135deg, #dfc691 0%, #faecd0 50%, #cfb070 100%);
+  color: #3b2c14;
+}
+
+/* Pulse radar ring */
+@keyframes pulseRadar {
+  0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(111, 149, 86, 0.7); }
+  70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 10px rgba(111, 149, 86, 0); }
+  100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(111, 149, 86, 0); }
+}
+
+.radar-live {
+  animation: pulseRadar 2.2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* Custom scrollbars */
 .no-scrollbar {
   scrollbar-width: none;
 }
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Interactive touch */
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.field {
+  display: block;
+  width: 100%;
+  height: 2.9rem;
+  margin-top: 0.45rem;
+  border: 1px solid #cfddc9;
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0 0.8rem;
+  color: #20301c;
+  outline: none;
+}
+
+.field:focus {
+  border-color: #6f9556;
+  box-shadow: 0 0 0 4px rgb(111 149 86 / 10%);
 }
 
 @media (prefers-reduced-motion: reduce) {
