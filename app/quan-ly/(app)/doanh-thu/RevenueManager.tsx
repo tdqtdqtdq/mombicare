@@ -10,6 +10,7 @@ import {
 } from "react";
 import { createClient } from "@/app/lib/supabase/client";
 import { downloadExcel } from "../../excel";
+import { CurrencyInput } from "../../components/CurrencyInput";
 import { formatVnd } from "../../utils";
 import {
   expenseCategoryLabels,
@@ -130,7 +131,7 @@ export function RevenueManager({ profile }: { profile: Profile }) {
         supabase
           .from("revenue_entries")
           .select(
-            "id, service_date, customer_name, sale_type, service_id, service_name_snapshot, revenue_amount, price_snapshot, external_payout_amount, technician_id, consultant_id, created_by, notes, status, service:services(name), technician:profiles!revenue_entries_technician_id_fkey(display_name), consultant:profiles!revenue_entries_consultant_id_fkey(display_name)",
+            "id, service_date, customer_name, source_ref, sale_type, service_id, service_name_snapshot, revenue_amount, price_snapshot, external_payout_amount, technician_id, consultant_id, created_by, notes, status, service:services(name), technician:profiles!revenue_entries_technician_id_fkey(display_name), consultant:profiles!revenue_entries_consultant_id_fkey(display_name)",
           )
           .order("service_date", { ascending: false })
           .order("created_at", { ascending: false })
@@ -169,11 +170,11 @@ export function RevenueManager({ profile }: { profile: Profile }) {
         service_id: first.id,
         price_snapshot: Number(first.default_price),
         revenue_amount: Number(first.default_price),
-        technician_id: profile.role === "staff" ? profile.id : "",
+        technician_id: profile.id,
       };
     });
     setLoading(false);
-  }, [profile.id, profile.role]);
+  }, [profile.id]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -488,7 +489,7 @@ export function RevenueManager({ profile }: { profile: Profile }) {
         service_id: services[0]?.id ?? "",
         price_snapshot: Number(services[0]?.default_price ?? 0),
         revenue_amount: Number(services[0]?.default_price ?? 0),
-        technician_id: profile.role === "staff" ? profile.id : "",
+        technician_id: profile.id,
       }));
       await load();
     }
@@ -764,7 +765,7 @@ export function RevenueManager({ profile }: { profile: Profile }) {
           phụ thuộc khách giảm giá.
         </p>
         <p className="rounded-xl border border-[#d8e4d2] bg-[#f7faf5] px-4 py-3 text-sm text-[#52624c]">
-          <strong className="text-[#2e4627]">Tư vấn:</strong> tỷ lệ cá nhân ×
+          <strong className="text-[#2e4627]">Người bán:</strong> tỷ lệ cá nhân ×
           thực thu.
         </p>
         <p className="rounded-xl border border-[#d8e4d2] bg-[#f7faf5] px-4 py-3 text-sm text-[#52624c]">
@@ -890,7 +891,7 @@ export function RevenueManager({ profile }: { profile: Profile }) {
           )}
           {!isExternalTour && (
             <label className="text-sm font-semibold text-[#40533b]">
-              Người tư vấn{" "}
+              Người bán{" "}
               <span className="font-normal text-[#85937e]">(nếu có)</span>
               <select
                 value={form.consultant_id}
@@ -913,13 +914,11 @@ export function RevenueManager({ profile }: { profile: Profile }) {
             <span className="font-normal text-[#85937e]">
               (căn cứ chia KTV)
             </span>
-            <input
+            <CurrencyInput
               readOnly={!canEditAmounts}
-              min="0"
-              type="number"
               value={form.price_snapshot}
-              onChange={(event) =>
-                setForm({ ...form, price_snapshot: Number(event.target.value) })
+              onValueChange={(price_snapshot) =>
+                setForm({ ...form, price_snapshot })
               }
               className={`field ${canEditAmounts ? "" : "cursor-not-allowed bg-[#f3f7ef] text-[#65745f]"}`}
             />
@@ -934,14 +933,12 @@ export function RevenueManager({ profile }: { profile: Profile }) {
             <span className="font-normal text-[#85937e]">
               (tiền khách trả hôm nay)
             </span>
-            <input
+            <CurrencyInput
               readOnly={!canEditAmounts}
               required
-              min="0"
-              type="number"
               value={form.revenue_amount}
-              onChange={(event) =>
-                setForm({ ...form, revenue_amount: Number(event.target.value) })
+              onValueChange={(revenue_amount) =>
+                setForm({ ...form, revenue_amount })
               }
               className={`field ${canEditAmounts ? "" : "cursor-not-allowed bg-[#f3f7ef] text-[#65745f]"}`}
             />
@@ -957,15 +954,13 @@ export function RevenueManager({ profile }: { profile: Profile }) {
               <span className="font-normal text-[#85937e]">
                 (không tính lương nhân viên)
               </span>
-              <input
+              <CurrencyInput
                 required
-                min="0"
-                type="number"
                 value={form.external_payout_amount}
-                onChange={(event) =>
+                onValueChange={(external_payout_amount) =>
                   setForm({
                     ...form,
-                    external_payout_amount: Number(event.target.value),
+                    external_payout_amount,
                   })
                 }
                 className="field"
@@ -1069,15 +1064,13 @@ export function RevenueManager({ profile }: { profile: Profile }) {
             </label>
             <label className="text-sm font-semibold text-[#6f5b32]">
               Số tiền chi
-              <input
+              <CurrencyInput
                 required
-                min="1"
-                type="number"
                 value={expenseForm.amount}
-                onChange={(event) =>
+                onValueChange={(amount) =>
                   setExpenseForm({
                     ...expenseForm,
-                    amount: Number(event.target.value),
+                    amount,
                   })
                 }
                 className="field bg-white"
@@ -1320,7 +1313,16 @@ export function RevenueManager({ profile }: { profile: Profile }) {
                                 </td>
                                 {profile.role === "owner" && (
                                   <td className="px-5 py-4">
-                                    {cashItem.item.status === "completed" ? (
+                                    {cashItem.item.source_ref?.startsWith(
+                                      "customer-package-",
+                                    ) ||
+                                    cashItem.item.source_ref?.startsWith(
+                                      "gift-voucher-",
+                                    ) ? (
+                                      <span className="text-xs font-semibold text-[#71816c]">
+                                        Quản lý tại Gói & quà tặng
+                                      </span>
+                                    ) : cashItem.item.status === "completed" ? (
                                       <div className="flex items-center gap-3 whitespace-nowrap">
                                         <button
                                           type="button"
@@ -1587,7 +1589,7 @@ export function RevenueManager({ profile }: { profile: Profile }) {
                       </select>
                     </label>
                     <label className="text-sm font-semibold text-[#40533b]">
-                      Người tư vấn
+                      Người bán
                       <select
                         value={editEntryForm.consultant_id}
                         onChange={(event) =>
@@ -1610,15 +1612,13 @@ export function RevenueManager({ profile }: { profile: Profile }) {
                 )}
                 <label className="text-sm font-semibold text-[#40533b]">
                   Giá gói
-                  <input
+                  <CurrencyInput
                     required
-                    min="0"
-                    type="number"
                     value={editEntryForm.price_snapshot}
-                    onChange={(event) =>
+                    onValueChange={(price_snapshot) =>
                       setEditEntryForm({
                         ...editEntryForm,
-                        price_snapshot: Number(event.target.value),
+                        price_snapshot,
                       })
                     }
                     className="field"
@@ -1626,15 +1626,13 @@ export function RevenueManager({ profile }: { profile: Profile }) {
                 </label>
                 <label className="text-sm font-semibold text-[#40533b]">
                   Thực thu
-                  <input
+                  <CurrencyInput
                     required
-                    min="0"
-                    type="number"
                     value={editEntryForm.revenue_amount}
-                    onChange={(event) =>
+                    onValueChange={(revenue_amount) =>
                       setEditEntryForm({
                         ...editEntryForm,
-                        revenue_amount: Number(event.target.value),
+                        revenue_amount,
                       })
                     }
                     className="field"
@@ -1643,15 +1641,13 @@ export function RevenueManager({ profile }: { profile: Profile }) {
                 {editEntryForm.sale_type === "external_tour" && (
                   <label className="text-sm font-semibold text-[#40533b]">
                     Chi trả tua ngoài
-                    <input
+                    <CurrencyInput
                       required
-                      min="0"
-                      type="number"
                       value={editEntryForm.external_payout_amount}
-                      onChange={(event) =>
+                      onValueChange={(external_payout_amount) =>
                         setEditEntryForm({
                           ...editEntryForm,
-                          external_payout_amount: Number(event.target.value),
+                          external_payout_amount,
                         })
                       }
                       className="field"
@@ -1777,15 +1773,13 @@ export function RevenueManager({ profile }: { profile: Profile }) {
                 </label>
                 <label className="text-sm font-semibold text-[#6f5b32]">
                   Số tiền chi
-                  <input
+                  <CurrencyInput
                     required
-                    min="1"
-                    type="number"
                     value={editExpenseForm.amount}
-                    onChange={(event) =>
+                    onValueChange={(amount) =>
                       setEditExpenseForm({
                         ...editExpenseForm,
-                        amount: Number(event.target.value),
+                        amount,
                       })
                     }
                     className="field"

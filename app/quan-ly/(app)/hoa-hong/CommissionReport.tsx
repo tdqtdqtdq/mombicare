@@ -121,7 +121,7 @@ function CommissionTable({
             className="field mt-1 max-w-xs py-2 text-sm"
           >
             <option value="">
-              Tất cả {target === "technician" ? "KTV" : "tư vấn"}
+              Tất cả {target === "technician" ? "KTV" : "người bán"}
             </option>
             {employees.map((employee) => (
               <option key={employee.id} value={employee.id}>
@@ -682,7 +682,7 @@ export function CommissionReport({ profile }: { profile: Profile }) {
       amountColumns: [5],
       summary: [
         ["Tổng KTV", technicianTotal],
-        ["Tổng tư vấn", consultantTotal],
+        ["Tổng người bán", consultantTotal],
         ["Chi tua ngoài", externalTourPayout],
         ["Tổng cần chi nhân viên", technicianTotal + consultantTotal],
       ],
@@ -740,7 +740,7 @@ export function CommissionReport({ profile }: { profile: Profile }) {
             Hoa hồng & lương
           </h1>
           <p className="mt-2 text-sm text-[#66745f]">
-            Tách riêng tiền kỹ thuật, tư vấn và khoản trả tua ngoài để đối soát
+            Tách riêng tiền kỹ thuật, người bán và khoản trả tua ngoài để đối soát
             từng nhóm rõ ràng.
           </p>
         </div>
@@ -841,13 +841,13 @@ export function CommissionReport({ profile }: { profile: Profile }) {
         </article>
         <article className="rounded-2xl border border-[#d8e4d2] bg-white p-6 shadow-sm">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#6f9556]">
-            Tổng tư vấn
+            Tổng người bán
           </p>
           <p className="mt-3 font-serif text-4xl text-[#1c2619]">
             {loading ? "…" : formatVnd(consultantTotal)}
           </p>
           <p className="mt-2 text-sm text-[#71816c]">
-            {consultantLedgers.length} dòng tư vấn
+            {consultantLedgers.length} dòng người bán
           </p>
         </article>
         <article className="rounded-2xl border border-[#d8e4d2] bg-white p-6 shadow-sm">
@@ -888,7 +888,7 @@ export function CommissionReport({ profile }: { profile: Profile }) {
           </div>
         </article>
         <article className="rounded-2xl border border-[#d8e4d2] bg-white p-5 shadow-sm">
-          <h2 className="font-serif text-2xl">Theo tư vấn</h2>
+          <h2 className="font-serif text-2xl">Theo người bán</h2>
           <div className="mt-3 divide-y divide-[#edf1ea]">
             {consultantGroups.map((group) => (
               <div
@@ -908,7 +908,7 @@ export function CommissionReport({ profile }: { profile: Profile }) {
             ))}
             {!loading && consultantGroups.length === 0 && (
               <p className="py-3 text-sm text-[#71816c]">
-                Chưa có hoa hồng tư vấn.
+                Chưa có hoa hồng người bán.
               </p>
             )}
           </div>
@@ -1004,8 +1004,8 @@ export function CommissionReport({ profile }: { profile: Profile }) {
               }
             />
             <CommissionTable
-              title="Hoa hồng tư vấn"
-              description="Tiền tư vấn tính theo tỷ lệ riêng và thực thu."
+              title="Hoa hồng người bán"
+              description="Tiền người bán tính theo tỷ lệ riêng và thực thu."
               target="consultant"
               rows={visibleConsultantLedgers}
               total={filteredConsultantLedgers.reduce(

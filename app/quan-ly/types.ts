@@ -34,6 +34,7 @@ export type CommissionRule = {
 
 export type RevenueEntry = {
   id: string;
+  source_ref?: string | null;
   service_date: string;
   customer_name: string;
   sale_type: SaleType;
@@ -107,7 +108,7 @@ export const saleTypeLabels: Record<SaleType, string> = {
 
 export const commissionTargetLabels: Record<CommissionTarget, string> = {
   technician: "Kỹ thuật",
-  consultant: "Tư vấn",
+  consultant: "Người bán",
 };
 
 export const expenseCategoryLabels: Record<ExpenseCategory, string> = {

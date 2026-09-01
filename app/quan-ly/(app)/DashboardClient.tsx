@@ -4,10 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/app/lib/supabase/client";
 import { currentMonth, formatVnd, monthBounds } from "../utils";
+import { CurrencyInput } from "../components/CurrencyInput";
 import { type MonthlyTarget, type Profile, type SaleType } from "../types";
 
 type EntryTotal = {
   id: string;
+  source_ref: string | null;
   revenue_amount: number | string;
   external_payout_amount: number | string;
   sale_type: SaleType;
@@ -37,10 +39,10 @@ export function DashboardClient({ profile }: { profile: Profile }) {
     const { from, to } = monthBounds(month);
     const supabase = createClient();
     const [entryResult, ledgerResult, targetResult, peopleResult] = await Promise.all([
-      supabase.from("revenue_entries").select("id, revenue_amount, external_payout_amount, sale_type, technician_id, consultant_id, status, service_date").gte("service_date", from).lte("service_date", to).order("service_date", { ascending: false }),
+      supabase.from("revenue_entries").select("id, source_ref, revenue_amount, external_payout_amount, sale_type, technician_id, consultant_id, status, service_date").gte("service_date", from).lte("service_date", to).order("service_date", { ascending: false }),
       supabase.from("commission_ledger").select("amount, status").gte("service_date", from).lte("service_date", to),
       supabase.from("monthly_targets").select("id, profile_id, target_month, target_amount").eq("target_month", monthStart),
-      profile.role === "owner" ? supabase.from("profiles").select("id, display_name, role, is_active").eq("is_active", true).eq("role", "staff").order("display_name") : Promise.resolve({ data: [], error: null }),
+      profile.role === "owner" ? supabase.from("profiles").select("id, display_name, role, is_active").eq("is_active", true).order("display_name") : Promise.resolve({ data: [], error: null }),
     ]);
     if (entryResult.error || ledgerResult.error || targetResult.error || peopleResult.error) {
       setMessage("Không tải được số liệu hoặc mục tiêu tháng. Hãy chạy migration mới nhất trên Supabase.");
@@ -68,8 +70,33 @@ export function DashboardClient({ profile }: { profile: Profile }) {
     const externalTourRevenue = completed.filter((entry) => entry.sale_type === "external_tour").reduce((sum, entry) => sum + Number(entry.revenue_amount), 0);
     const externalTourPayout = completed.filter((entry) => entry.sale_type === "external_tour").reduce((sum, entry) => sum + Number(entry.external_payout_amount), 0);
     const commission = ledgers.reduce((sum, ledger) => sum + Number(ledger.amount), 0);
-    const revenueFor = (profileId: string) => completed.filter((entry) => entry.technician_id === profileId || entry.consultant_id === profileId).reduce((sum, entry) => sum + Number(entry.revenue_amount), 0);
-    return { revenue, externalTourRevenue, externalTourPayout, commission, count: completed.length, revenueFor, pending: ledgers.filter((ledger) => ledger.status === "pending").reduce((sum, ledger) => sum + Number(ledger.amount), 0) };
+    const revenueFor = (profileId: string) => completed.reduce((sum, entry) => {
+      if (entry.sale_type === "package_sale") {
+        return entry.consultant_id === profileId
+          ? sum + Number(entry.revenue_amount)
+          : sum;
+      }
+      if (entry.sale_type === "package_usage" || entry.sale_type === "gift") {
+        return sum;
+      }
+      return entry.technician_id === profileId || entry.consultant_id === profileId
+        ? sum + Number(entry.revenue_amount)
+        : sum;
+    }, 0);
+    const sourceTotal = (label: string, matches: (entry: EntryTotal) => boolean) => {
+      const sourceEntries = completed.filter(matches);
+      return { label, amount: sourceEntries.reduce((sum, entry) => sum + Number(entry.revenue_amount), 0), count: sourceEntries.length };
+    };
+    const sources = [
+      sourceTotal("Dịch vụ lẻ", (entry) => entry.sale_type === "retail"),
+      sourceTotal("Bán gói", (entry) => entry.source_ref?.startsWith("customer-package-sale:") ?? false),
+      sourceTotal("Bán phiếu quà tặng", (entry) => entry.source_ref?.startsWith("gift-voucher-sale:") ?? false),
+      sourceTotal("Thu thêm khi dùng gói", (entry) => entry.sale_type === "package_usage"),
+      sourceTotal("Thu thêm khi đổi phiếu", (entry) => entry.sale_type === "gift"),
+      sourceTotal("Tua ngoài", (entry) => entry.sale_type === "external_tour"),
+      sourceTotal("Bán gói / phiếu (dữ liệu cũ)", (entry) => entry.sale_type === "package_sale" && !entry.source_ref),
+    ].filter((source) => source.count > 0);
+    return { revenue, externalTourRevenue, externalTourPayout, commission, count: completed.length, revenueFor, sources, pending: ledgers.filter((ledger) => ledger.status === "pending").reduce((sum, ledger) => sum + Number(ledger.amount), 0) };
   }, [entries, ledgers]);
 
   const targetFor = (profileId: string) => Number(targets.find((target) => target.profile_id === profileId)?.target_amount ?? 0);
@@ -117,15 +144,35 @@ export function DashboardClient({ profile }: { profile: Profile }) {
         </article>)}
       </div>
 
+      <article className="mt-6 rounded-2xl border border-[#d8e4d2] bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="font-serif text-2xl text-[#1c2619]">Doanh thu đến từ đâu?</h2>
+            <p className="mt-1 text-sm text-[#71816c]">Tổng hợp các khoản thu trong tháng đang xem.</p>
+          </div>
+          <Link href="/quan-ly/doanh-thu" className="text-sm font-bold text-[#50713c] hover:underline">Xem sổ doanh thu</Link>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {stats.sources.map((source) => (
+            <div key={source.label} className="rounded-xl bg-[#f4f8f1] px-4 py-3">
+              <p className="text-sm font-bold text-[#40533b]">{source.label}</p>
+              <p className="mt-1 font-serif text-2xl text-[#24361e]">{formatVnd(source.amount)}</p>
+              <p className="mt-1 text-xs text-[#71816c]">{source.count} giao dịch</p>
+            </div>
+          ))}
+          {!loading && stats.sources.length === 0 && <p className="text-sm text-[#71816c]">Chưa có doanh thu trong tháng này.</p>}
+        </div>
+      </article>
+
       {profile.role === "owner" ? <article className="mt-6 overflow-hidden rounded-2xl border border-[#d8e4d2] bg-white shadow-sm">
-        <div className="flex flex-col gap-1 border-b border-[#e5ede1] px-5 py-4"><h2 className="font-serif text-2xl">Mục tiêu theo nhân viên</h2><p className="text-sm text-[#71816c]">Chủ spa đặt mục tiêu riêng cho từng tháng. Doanh số và số còn thiếu được tính tự động.</p></div>
-        <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="bg-[#f5f8f2] text-xs uppercase tracking-wide text-[#71816c]"><tr><th className="px-5 py-3">Nhân viên</th><th className="px-5 py-3">Mục tiêu</th><th className="px-5 py-3">Doanh số</th><th className="px-5 py-3">Còn thiếu</th><th className="px-5 py-3" /></tr></thead><tbody>{people.map((person) => { const target = Number(targetDrafts[person.id] ?? targetFor(person.id)); const revenue = stats.revenueFor(person.id); return <tr key={person.id} className="border-t border-[#edf1ea]"><td className="px-5 py-4 font-semibold">{person.display_name}</td><td className="px-5 py-4"><input min="0" type="number" value={target} onChange={(event) => setTargetDrafts((current) => ({ ...current, [person.id]: Number(event.target.value) }))} className="w-40 rounded-lg border border-[#cfddc9] px-3 py-2 outline-none focus:border-[#6f9556]" /></td><td className="px-5 py-4 font-semibold">{formatVnd(revenue)}</td><td className="px-5 py-4 font-semibold text-[#86632e]">{formatVnd(Math.max(0, target - revenue))}</td><td className="px-5 py-4"><button disabled={savingTargetId === person.id} onClick={() => void saveTarget(person)} className="rounded-lg bg-[#6f9556] px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{savingTargetId === person.id ? "Đang lưu…" : "Lưu mục tiêu"}</button></td></tr>; })}{people.length === 0 && <tr><td colSpan={5} className="px-5 py-5 text-[#71816c]">Chưa có nhân viên đang hoạt động.</td></tr>}</tbody></table></div>
+        <div className="flex flex-col gap-1 border-b border-[#e5ede1] px-5 py-4"><h2 className="font-serif text-2xl">Mục tiêu theo nhân viên</h2><p className="text-sm text-[#71816c]">Khách lẻ: tính doanh thu cho KTV thực hiện và người bán nếu có. Bán gói: chỉ ghi một lần cho người bán. Dùng buổi trong gói không cộng lại doanh thu; KTV nhận hoa hồng riêng.</p></div>
+          <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="bg-[#f5f8f2] text-xs uppercase tracking-wide text-[#71816c]"><tr><th className="px-5 py-3">Nhân viên</th><th className="px-5 py-3">Mục tiêu doanh số</th><th className="px-5 py-3">Doanh số đã ghi</th><th className="px-5 py-3">Còn thiếu</th><th className="px-5 py-3" /></tr></thead><tbody>{people.map((person) => { const target = Number(targetDrafts[person.id] ?? targetFor(person.id)); const revenue = stats.revenueFor(person.id); return <tr key={person.id} className="border-t border-[#edf1ea]"><td className="px-5 py-4 font-semibold">{person.display_name}</td><td className="px-5 py-4"><CurrencyInput value={target} onValueChange={(target) => setTargetDrafts((current) => ({ ...current, [person.id]: target }))} className="w-40 rounded-lg border border-[#cfddc9] px-3 py-2 outline-none focus:border-[#6f9556]" /></td><td className="px-5 py-4 font-semibold">{formatVnd(revenue)}</td><td className="px-5 py-4 font-semibold text-[#86632e]">{formatVnd(Math.max(0, target - revenue))}</td><td className="px-5 py-4"><button disabled={savingTargetId === person.id} onClick={() => void saveTarget(person)} className="rounded-lg bg-[#6f9556] px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{savingTargetId === person.id ? "Đang lưu…" : "Lưu mục tiêu"}</button></td></tr>; })}{people.length === 0 && <tr><td colSpan={5} className="px-5 py-5 text-[#71816c]">Chưa có nhân viên đang hoạt động.</td></tr>}</tbody></table></div>
       </article> : <article className="mt-6 rounded-2xl border border-[#d8e4d2] bg-white p-6 shadow-sm"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#6f9556]">Mục tiêu của bạn · {month}</p><div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="font-serif text-4xl text-[#1c2619]">{loading ? "…" : formatVnd(ownTarget)}</p><p className="mt-1 text-sm text-[#71816c]">Do chủ spa thiết lập cho tháng này.</p></div><div className="sm:text-right"><p className="text-sm text-[#71816c]">Doanh số: <strong className="text-[#34472e]">{formatVnd(ownRevenue)}</strong></p><p className="mt-1 text-sm text-[#86632e]">Còn thiếu: <strong>{formatVnd(Math.max(0, ownTarget - ownRevenue))}</strong></p></div></div></article>}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <article className="rounded-2xl border border-[#dce7d6] bg-white p-6 shadow-sm">
           <h2 className="font-serif text-2xl">Bắt đầu ghi nhận</h2>
-          <p className="mt-2 text-sm leading-6 text-[#65745f]">Chọn dịch vụ, tên khách hàng, kỹ thuật viên, người tư vấn và số tiền thực thu. Giá và thực thu của nhân viên được khóa theo bảng giá chủ spa đã thiết lập.</p>
+          <p className="mt-2 text-sm leading-6 text-[#65745f]">Chọn dịch vụ, tên khách hàng, kỹ thuật viên, người bán và số tiền thực thu. Giá và thực thu của nhân viên được khóa theo bảng giá chủ spa đã thiết lập.</p>
           <Link href="/quan-ly/doanh-thu" className="mt-5 inline-flex rounded-xl bg-[#6f9556] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#55763f]">+ Nhập doanh thu</Link>
         </article>
         <article className="rounded-2xl border border-[#dce7d6] bg-white p-6 shadow-sm">
