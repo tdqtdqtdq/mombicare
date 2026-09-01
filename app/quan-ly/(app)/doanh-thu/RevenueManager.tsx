@@ -81,6 +81,14 @@ export function RevenueManager({ profile }: { profile: Profile }) {
   const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
   const [form, setForm] = useState<EntryForm>(blankForm);
   const [expenseForm, setExpenseForm] = useState<ExpenseForm>(blankExpense);
+  const [editingEntry, setEditingEntry] = useState<RevenueEntry | null>(null);
+  const [editEntryForm, setEditEntryForm] = useState<EntryForm | null>(null);
+  const [editingExpense, setEditingExpense] = useState<ExpenseEntry | null>(
+    null,
+  );
+  const [editExpenseForm, setEditExpenseForm] = useState<ExpenseForm | null>(
+    null,
+  );
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -205,6 +213,81 @@ export function RevenueManager({ profile }: { profile: Profile }) {
       technician_id: saleType === "external_tour" ? "" : current.technician_id,
       consultant_id: saleType === "external_tour" ? "" : current.consultant_id,
     }));
+  }
+
+  function openEntryEditor(entry: RevenueEntry) {
+    setEditingEntry(entry);
+    setEditEntryForm({
+      service_date: entry.service_date,
+      customer_name: entry.customer_name,
+      service_id: entry.service_id,
+      sale_type: entry.sale_type,
+      price_snapshot: Number(entry.price_snapshot),
+      revenue_amount: Number(entry.revenue_amount),
+      external_payout_amount: Number(entry.external_payout_amount),
+      technician_id: entry.technician_id ?? "",
+      consultant_id: entry.consultant_id ?? "",
+      notes: entry.notes ?? "",
+    });
+    setMessage("");
+  }
+
+  function selectEditService(serviceId: string) {
+    const service = services.find((item) => item.id === serviceId);
+    const price = Number(service?.default_price ?? 0);
+    setEditEntryForm((current) =>
+      current
+        ? {
+            ...current,
+            service_id: serviceId,
+            price_snapshot: price,
+            revenue_amount:
+              current.sale_type === "package_usage" ||
+              current.sale_type === "gift"
+                ? 0
+                : price,
+            external_payout_amount:
+              current.sale_type === "external_tour"
+                ? Math.round(price * 0.5)
+                : 0,
+          }
+        : current,
+    );
+  }
+
+  function selectEditSaleType(saleType: SaleType) {
+    setEditEntryForm((current) =>
+      current
+        ? {
+            ...current,
+            sale_type: saleType,
+            revenue_amount:
+              saleType === "package_usage" || saleType === "gift"
+                ? 0
+                : current.price_snapshot,
+            external_payout_amount:
+              saleType === "external_tour"
+                ? Math.round(current.price_snapshot * 0.5)
+                : 0,
+            technician_id:
+              saleType === "external_tour" ? "" : current.technician_id,
+            consultant_id:
+              saleType === "external_tour" ? "" : current.consultant_id,
+          }
+        : current,
+    );
+  }
+
+  function openExpenseEditor(expense: ExpenseEntry) {
+    setEditingExpense(expense);
+    setEditExpenseForm({
+      expense_date: expense.expense_date,
+      category: expense.category,
+      description: expense.description,
+      amount: Number(expense.amount),
+      notes: expense.notes ?? "",
+    });
+    setMessage("");
   }
 
   const cashbookDays = useMemo(() => {
@@ -442,6 +525,162 @@ export function RevenueManager({ profile }: { profile: Profile }) {
     else {
       setMessage("Đã ghi khoản chi vào sổ.");
       setExpenseForm(blankExpense());
+      await load();
+    }
+    setSaving(false);
+  }
+
+  async function saveEntryEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingEntry || !editEntryForm || profile.role !== "owner") return;
+    const service = services.find(
+      (item) => item.id === editEntryForm.service_id,
+    );
+    const externalTour = editEntryForm.sale_type === "external_tour";
+    const customerName =
+      editEntryForm.customer_name.trim() ||
+      (externalTour ? "Khách tua ngoài (không có tên)" : "");
+    if (
+      !service ||
+      !customerName ||
+      (!externalTour &&
+        editEntryForm.sale_type !== "package_sale" &&
+        !editEntryForm.technician_id)
+    ) {
+      setMessage(
+        "Chưa thể lưu: cần tên khách, dịch vụ và kỹ thuật viên hợp lệ.",
+      );
+      return;
+    }
+
+    setSaving(true);
+    setMessage("");
+    const technicianId = externalTour
+      ? null
+      : editEntryForm.technician_id || null;
+    const consultantId = externalTour
+      ? null
+      : editEntryForm.consultant_id || null;
+    const externalPayoutAmount = externalTour
+      ? Math.max(0, editEntryForm.external_payout_amount)
+      : 0;
+    const notes = editEntryForm.notes.trim() || null;
+    const update: Record<string, string | number | null> = {};
+
+    if (editEntryForm.service_date !== editingEntry.service_date)
+      update.service_date = editEntryForm.service_date;
+    if (customerName !== editingEntry.customer_name)
+      update.customer_name = customerName;
+    if (editEntryForm.service_id !== editingEntry.service_id) {
+      update.service_id = editEntryForm.service_id;
+      update.service_name_snapshot = service.name;
+    }
+    if (editEntryForm.sale_type !== editingEntry.sale_type)
+      update.sale_type = editEntryForm.sale_type;
+    if (
+      Math.max(0, editEntryForm.price_snapshot) !==
+      Number(editingEntry.price_snapshot)
+    )
+      update.price_snapshot = Math.max(0, editEntryForm.price_snapshot);
+    if (
+      Math.max(0, editEntryForm.revenue_amount) !==
+      Number(editingEntry.revenue_amount)
+    )
+      update.revenue_amount = Math.max(0, editEntryForm.revenue_amount);
+    if (externalPayoutAmount !== Number(editingEntry.external_payout_amount))
+      update.external_payout_amount = externalPayoutAmount;
+    if (technicianId !== editingEntry.technician_id)
+      update.technician_id = technicianId;
+    if (consultantId !== editingEntry.consultant_id)
+      update.consultant_id = consultantId;
+    if (notes !== editingEntry.notes) update.notes = notes;
+
+    if (Object.keys(update).length === 0) {
+      setMessage("Không có thay đổi nào để lưu.");
+      setSaving(false);
+      return;
+    }
+    const recalculatesCommission = [
+      "service_date",
+      "service_id",
+      "sale_type",
+      "price_snapshot",
+      "revenue_amount",
+      "technician_id",
+      "consultant_id",
+    ].some((field) => field in update);
+
+    const { data, error } = await createClient()
+      .from("revenue_entries")
+      .update(update)
+      .eq("id", editingEntry.id)
+      .eq("status", "completed")
+      .select("id")
+      .maybeSingle();
+
+    if (error || !data) {
+      setMessage(
+        error?.message.includes("đã chốt lương")
+          ? "Không thể sửa vì hoa hồng của dòng này đã chốt hoặc đã trả."
+          : `Không thể lưu chỉnh sửa: ${error?.message ?? "dòng đã thay đổi hoặc bị hủy"}.`,
+      );
+    } else {
+      setMessage(
+        recalculatesCommission
+          ? "Đã cập nhật doanh thu và tính lại hoa hồng liên quan."
+          : "Đã cập nhật thông tin, hoa hồng được giữ nguyên.",
+      );
+      setEditingEntry(null);
+      setEditEntryForm(null);
+      await load();
+    }
+    setSaving(false);
+  }
+
+  async function saveExpenseEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingExpense || !editExpenseForm || profile.role !== "owner") return;
+    if (!editExpenseForm.description.trim() || editExpenseForm.amount <= 0) {
+      setMessage("Cần nhập nội dung và số tiền chi lớn hơn 0.");
+      return;
+    }
+
+    setSaving(true);
+    setMessage("");
+    const notes = editExpenseForm.notes.trim() || null;
+    const update: Record<string, string | number | null> = {};
+    if (editExpenseForm.expense_date !== editingExpense.expense_date)
+      update.expense_date = editExpenseForm.expense_date;
+    if (editExpenseForm.category !== editingExpense.category)
+      update.category = editExpenseForm.category;
+    if (editExpenseForm.description.trim() !== editingExpense.description)
+      update.description = editExpenseForm.description.trim();
+    if (editExpenseForm.amount !== Number(editingExpense.amount))
+      update.amount = editExpenseForm.amount;
+    if (notes !== editingExpense.notes) update.notes = notes;
+
+    if (Object.keys(update).length === 0) {
+      setMessage("Không có thay đổi nào để lưu.");
+      setSaving(false);
+      return;
+    }
+
+    const { data, error } = await createClient()
+      .from("expense_entries")
+      .update(update)
+      .eq("id", editingExpense.id)
+      .eq("status", "completed")
+      .select("id")
+      .maybeSingle();
+
+    if (error || !data) {
+      setMessage(
+        `Không thể lưu khoản chi: ${error?.message ?? "dòng đã thay đổi hoặc bị hủy"}.`,
+      );
+    } else {
+      setMessage("Đã cập nhật khoản chi.");
+      setEditingExpense(null);
+      setEditExpenseForm(null);
       await load();
     }
     setSaving(false);
@@ -1082,16 +1321,29 @@ export function RevenueManager({ profile }: { profile: Profile }) {
                                 {profile.role === "owner" && (
                                   <td className="px-5 py-4">
                                     {cashItem.item.status === "completed" ? (
-                                      <button
-                                        onClick={() =>
-                                          void voidEntry(cashItem.item.id)
-                                        }
-                                        className="text-xs font-bold text-[#a04c4c] hover:underline"
-                                      >
-                                        Hủy ghi nhận
-                                      </button>
+                                      <div className="flex items-center gap-3 whitespace-nowrap">
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            openEntryEditor(cashItem.item)
+                                          }
+                                          className="text-xs font-bold text-[#50713c] hover:underline"
+                                        >
+                                          Chỉnh sửa
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            void voidEntry(cashItem.item.id)
+                                          }
+                                          className="text-xs font-bold text-[#a04c4c] hover:underline"
+                                        >
+                                          Hủy ghi nhận
+                                        </button>
+                                      </div>
                                     ) : (
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           void deleteEntry(cashItem.item)
                                         }
@@ -1139,16 +1391,29 @@ export function RevenueManager({ profile }: { profile: Profile }) {
                                 {profile.role === "owner" && (
                                   <td className="px-5 py-4">
                                     {cashItem.item.status === "completed" ? (
-                                      <button
-                                        onClick={() =>
-                                          void voidExpense(cashItem.item.id)
-                                        }
-                                        className="text-xs font-bold text-[#a04c4c] hover:underline"
-                                      >
-                                        Hủy khoản chi
-                                      </button>
+                                      <div className="flex items-center gap-3 whitespace-nowrap">
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            openExpenseEditor(cashItem.item)
+                                          }
+                                          className="text-xs font-bold text-[#50713c] hover:underline"
+                                        >
+                                          Chỉnh sửa
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            void voidExpense(cashItem.item.id)
+                                          }
+                                          className="text-xs font-bold text-[#a04c4c] hover:underline"
+                                        >
+                                          Hủy khoản chi
+                                        </button>
+                                      </div>
                                     ) : (
                                       <button
+                                        type="button"
                                         onClick={() =>
                                           void deleteExpense(cashItem.item)
                                         }
@@ -1206,6 +1471,368 @@ export function RevenueManager({ profile }: { profile: Profile }) {
           </>
         )}
       </div>
+
+      {profile.role === "owner" && editingEntry && editEntryForm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#172015]/55 p-4 backdrop-blur-sm">
+          <div className="mx-auto my-6 w-full max-w-4xl rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#6f9556]">
+                  Chủ spa
+                </p>
+                <h2 className="mt-1 font-serif text-3xl text-[#24361e]">
+                  Chỉnh sửa doanh thu
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingEntry(null);
+                  setEditEntryForm(null);
+                  setMessage("");
+                }}
+                className="rounded-lg px-3 py-2 text-sm font-bold text-[#66745f] hover:bg-[#edf4e8]"
+              >
+                Đóng
+              </button>
+            </div>
+            <p className="mt-3 rounded-xl border border-[#d8e4d2] bg-[#f5f9f2] px-4 py-3 text-sm leading-6 text-[#52664b]">
+              Sửa tên khách hoặc ghi chú sẽ giữ nguyên hoa hồng. Nếu đổi ngày,
+              dịch vụ, giá, KTV hoặc tư vấn, hoa hồng chờ chốt sẽ được tính lại
+              tự động. Dòng đã chốt lương hoặc đã trả sẽ bị hệ thống từ chối.
+            </p>
+            <form onSubmit={saveEntryEdit} className="mt-5">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <label className="text-sm font-semibold text-[#40533b]">
+                  Ngày thực hiện
+                  <input
+                    required
+                    type="date"
+                    value={editEntryForm.service_date}
+                    onChange={(event) =>
+                      setEditEntryForm({
+                        ...editEntryForm,
+                        service_date: event.target.value,
+                      })
+                    }
+                    className="field"
+                  />
+                </label>
+                <label className="text-sm font-semibold text-[#40533b]">
+                  Tên khách hàng
+                  <input
+                    required={editEntryForm.sale_type !== "external_tour"}
+                    value={editEntryForm.customer_name}
+                    onChange={(event) =>
+                      setEditEntryForm({
+                        ...editEntryForm,
+                        customer_name: event.target.value,
+                      })
+                    }
+                    className="field"
+                  />
+                </label>
+                <label className="text-sm font-semibold text-[#40533b]">
+                  Dịch vụ
+                  <select
+                    required
+                    value={editEntryForm.service_id}
+                    onChange={(event) => selectEditService(event.target.value)}
+                    className="field"
+                  >
+                    {services.map((service) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm font-semibold text-[#40533b]">
+                  Hình thức
+                  <select
+                    value={editEntryForm.sale_type}
+                    onChange={(event) =>
+                      selectEditSaleType(event.target.value as SaleType)
+                    }
+                    className="field"
+                  >
+                    {saleTypes.map((value) => (
+                      <option key={value} value={value}>
+                        {saleTypeLabels[value]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {editEntryForm.sale_type !== "external_tour" && (
+                  <>
+                    <label className="text-sm font-semibold text-[#40533b]">
+                      Kỹ thuật viên
+                      <select
+                        required={editEntryForm.sale_type !== "package_sale"}
+                        value={editEntryForm.technician_id}
+                        onChange={(event) =>
+                          setEditEntryForm({
+                            ...editEntryForm,
+                            technician_id: event.target.value,
+                          })
+                        }
+                        className="field"
+                      >
+                        <option value="">Không có</option>
+                        {people.map((person) => (
+                          <option key={person.id} value={person.id}>
+                            {person.display_name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="text-sm font-semibold text-[#40533b]">
+                      Người tư vấn
+                      <select
+                        value={editEntryForm.consultant_id}
+                        onChange={(event) =>
+                          setEditEntryForm({
+                            ...editEntryForm,
+                            consultant_id: event.target.value,
+                          })
+                        }
+                        className="field"
+                      >
+                        <option value="">Không có</option>
+                        {people.map((person) => (
+                          <option key={person.id} value={person.id}>
+                            {person.display_name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </>
+                )}
+                <label className="text-sm font-semibold text-[#40533b]">
+                  Giá gói
+                  <input
+                    required
+                    min="0"
+                    type="number"
+                    value={editEntryForm.price_snapshot}
+                    onChange={(event) =>
+                      setEditEntryForm({
+                        ...editEntryForm,
+                        price_snapshot: Number(event.target.value),
+                      })
+                    }
+                    className="field"
+                  />
+                </label>
+                <label className="text-sm font-semibold text-[#40533b]">
+                  Thực thu
+                  <input
+                    required
+                    min="0"
+                    type="number"
+                    value={editEntryForm.revenue_amount}
+                    onChange={(event) =>
+                      setEditEntryForm({
+                        ...editEntryForm,
+                        revenue_amount: Number(event.target.value),
+                      })
+                    }
+                    className="field"
+                  />
+                </label>
+                {editEntryForm.sale_type === "external_tour" && (
+                  <label className="text-sm font-semibold text-[#40533b]">
+                    Chi trả tua ngoài
+                    <input
+                      required
+                      min="0"
+                      type="number"
+                      value={editEntryForm.external_payout_amount}
+                      onChange={(event) =>
+                        setEditEntryForm({
+                          ...editEntryForm,
+                          external_payout_amount: Number(event.target.value),
+                        })
+                      }
+                      className="field"
+                    />
+                  </label>
+                )}
+                <label className="text-sm font-semibold text-[#40533b] md:col-span-2">
+                  Ghi chú
+                  <input
+                    value={editEntryForm.notes}
+                    onChange={(event) =>
+                      setEditEntryForm({
+                        ...editEntryForm,
+                        notes: event.target.value,
+                      })
+                    }
+                    className="field"
+                  />
+                </label>
+              </div>
+              {message && (
+                <p className="mt-4 rounded-xl bg-[#f7faf5] px-4 py-3 text-sm text-[#55723f]">
+                  {message}
+                </p>
+              )}
+              <div className="mt-5 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingEntry(null);
+                    setEditEntryForm(null);
+                    setMessage("");
+                  }}
+                  className="rounded-xl border border-[#cad8c3] px-4 py-2.5 text-sm font-bold text-[#52664b]"
+                >
+                  Hủy
+                </button>
+                <button
+                  disabled={saving}
+                  className="rounded-xl bg-[#24361e] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  {saving ? "Đang lưu…" : "Lưu thay đổi"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {profile.role === "owner" && editingExpense && editExpenseForm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#172015]/55 p-4 backdrop-blur-sm">
+          <div className="mx-auto my-12 w-full max-w-2xl rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#9a6a22]">
+                  Chủ spa
+                </p>
+                <h2 className="mt-1 font-serif text-3xl text-[#493719]">
+                  Chỉnh sửa khoản chi
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingExpense(null);
+                  setEditExpenseForm(null);
+                  setMessage("");
+                }}
+                className="rounded-lg px-3 py-2 text-sm font-bold text-[#806c42] hover:bg-[#fff7e8]"
+              >
+                Đóng
+              </button>
+            </div>
+            <form onSubmit={saveExpenseEdit} className="mt-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="text-sm font-semibold text-[#6f5b32]">
+                  Ngày chi
+                  <input
+                    required
+                    type="date"
+                    value={editExpenseForm.expense_date}
+                    onChange={(event) =>
+                      setEditExpenseForm({
+                        ...editExpenseForm,
+                        expense_date: event.target.value,
+                      })
+                    }
+                    className="field"
+                  />
+                </label>
+                <label className="text-sm font-semibold text-[#6f5b32]">
+                  Nhóm chi
+                  <select
+                    value={editExpenseForm.category}
+                    onChange={(event) =>
+                      setEditExpenseForm({
+                        ...editExpenseForm,
+                        category: event.target.value as ExpenseCategory,
+                      })
+                    }
+                    className="field"
+                  >
+                    {expenseCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {expenseCategoryLabels[category]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm font-semibold text-[#6f5b32] sm:col-span-2">
+                  Nội dung
+                  <input
+                    required
+                    value={editExpenseForm.description}
+                    onChange={(event) =>
+                      setEditExpenseForm({
+                        ...editExpenseForm,
+                        description: event.target.value,
+                      })
+                    }
+                    className="field"
+                  />
+                </label>
+                <label className="text-sm font-semibold text-[#6f5b32]">
+                  Số tiền chi
+                  <input
+                    required
+                    min="1"
+                    type="number"
+                    value={editExpenseForm.amount}
+                    onChange={(event) =>
+                      setEditExpenseForm({
+                        ...editExpenseForm,
+                        amount: Number(event.target.value),
+                      })
+                    }
+                    className="field"
+                  />
+                </label>
+                <label className="text-sm font-semibold text-[#6f5b32] sm:col-span-2">
+                  Ghi chú
+                  <input
+                    value={editExpenseForm.notes}
+                    onChange={(event) =>
+                      setEditExpenseForm({
+                        ...editExpenseForm,
+                        notes: event.target.value,
+                      })
+                    }
+                    className="field"
+                  />
+                </label>
+              </div>
+              {message && (
+                <p className="mt-4 rounded-xl bg-[#fff8e9] px-4 py-3 text-sm text-[#806c42]">
+                  {message}
+                </p>
+              )}
+              <div className="mt-5 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingExpense(null);
+                    setEditExpenseForm(null);
+                    setMessage("");
+                  }}
+                  className="rounded-xl border border-[#e1d3ae] px-4 py-2.5 text-sm font-bold text-[#806c42]"
+                >
+                  Hủy
+                </button>
+                <button
+                  disabled={saving}
+                  className="rounded-xl bg-[#9a6a22] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  {saving ? "Đang lưu…" : "Lưu thay đổi"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
