@@ -108,6 +108,7 @@ export function RevenueManager({ profile }: { profile: Profile }) {
   const [openDays, setOpenDays] = useState<Record<string, boolean>>({});
 
   const canEditAmounts = profile.role === "owner";
+  const canEnterSaleAmounts = canEditAmounts || form.sale_type === "package_sale";
   const isExternalTour = form.sale_type === "external_tour";
   const availableSaleTypes = canEditAmounts
     ? saleTypes
@@ -200,13 +201,17 @@ export function RevenueManager({ profile }: { profile: Profile }) {
   }
 
   function selectSaleType(saleType: SaleType) {
+    const price = Number(
+      services.find((item) => item.id === form.service_id)?.default_price ?? 0,
+    );
     setForm((current) => ({
       ...current,
       sale_type: saleType,
+      price_snapshot: canEditAmounts ? current.price_snapshot : price,
       revenue_amount:
         saleType === "package_usage" || saleType === "gift"
           ? 0
-          : current.price_snapshot,
+          : canEditAmounts ? current.price_snapshot : price,
       external_payout_amount:
         saleType === "external_tour"
           ? Math.round(current.price_snapshot * 0.5)
@@ -915,14 +920,14 @@ export function RevenueManager({ profile }: { profile: Profile }) {
               (căn cứ chia KTV)
             </span>
             <CurrencyInput
-              readOnly={!canEditAmounts}
+              readOnly={!canEnterSaleAmounts}
               value={form.price_snapshot}
               onValueChange={(price_snapshot) =>
                 setForm({ ...form, price_snapshot })
               }
-              className={`field ${canEditAmounts ? "" : "cursor-not-allowed bg-[#f3f7ef] text-[#65745f]"}`}
+              className={`field ${canEnterSaleAmounts ? "" : "cursor-not-allowed bg-[#f3f7ef] text-[#65745f]"}`}
             />
-            {!canEditAmounts && (
+            {!canEnterSaleAmounts && (
               <span className="mt-1 block text-xs font-normal text-[#71816c]">
                 Giá do chủ spa thiết lập.
               </span>
@@ -934,15 +939,15 @@ export function RevenueManager({ profile }: { profile: Profile }) {
               (tiền khách trả hôm nay)
             </span>
             <CurrencyInput
-              readOnly={!canEditAmounts}
+              readOnly={!canEnterSaleAmounts}
               required
               value={form.revenue_amount}
               onValueChange={(revenue_amount) =>
                 setForm({ ...form, revenue_amount })
               }
-              className={`field ${canEditAmounts ? "" : "cursor-not-allowed bg-[#f3f7ef] text-[#65745f]"}`}
+              className={`field ${canEnterSaleAmounts ? "" : "cursor-not-allowed bg-[#f3f7ef] text-[#65745f]"}`}
             />
-            {!canEditAmounts && (
+            {!canEnterSaleAmounts && (
               <span className="mt-1 block text-xs font-normal text-[#71816c]">
                 Chỉ chủ spa được chỉnh thực thu.
               </span>
