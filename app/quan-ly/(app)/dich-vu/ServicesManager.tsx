@@ -54,6 +54,12 @@ function getCatalogGroup(serviceName: string): CatalogGroup {
   return "other";
 }
 
+function ChevronDown({ className = "" }: { className?: string }) {
+  return <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className={`h-5 w-5 shrink-0 transition-transform duration-200 ${className}`}>
+    <path d="m5 7.5 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>;
+}
+
 export function ServicesManager() {
   const [services, setServices] = useState<Service[]>([]);
   const [rules, setRules] = useState<CommissionRule[]>([]);
@@ -259,11 +265,23 @@ export function ServicesManager() {
   })).filter((group) => group.services.length > 0);
 
   const consultantRules = rules.filter((ruleItem) => ruleItem.target === "consultant" && !(ruleItem.sale_type === "package_sale" && !ruleItem.service_id && !ruleItem.recipient_profile_id));
-  const technicianRuleGroups = (Object.keys(catalogGroupMeta) as CatalogGroup[]).map((group) => ({
-    id: group,
-    ...catalogGroupMeta[group],
-    rules: rules.filter((ruleItem) => ruleItem.target === "technician" && getCatalogGroup(ruleItem.service?.name ?? "") === group),
-  })).filter((group) => group.rules.length > 0);
+  const technicianRuleGroups = (Object.keys(catalogGroupMeta) as CatalogGroup[]).map((group) => {
+    const groupRules = rules.filter((ruleItem) => ruleItem.target === "technician" && getCatalogGroup(ruleItem.service?.name ?? "") === group);
+    const serviceRules = groupRules.reduce<Array<{ id: string; name: string; rules: CommissionRule[] }>>((result, ruleItem) => {
+      const id = ruleItem.service_id ?? "all";
+      const existing = result.find((item) => item.id === id);
+      if (existing) existing.rules.push(ruleItem);
+      else result.push({ id, name: ruleItem.service?.name ?? "Tất cả dịch vụ", rules: [ruleItem] });
+      return result;
+    }, []).sort((left, right) => left.name.localeCompare(right.name, "vi"));
+
+    return {
+      id: group,
+      ...catalogGroupMeta[group],
+      ruleCount: groupRules.length,
+      serviceRules,
+    };
+  }).filter((group) => group.ruleCount > 0);
 
   return <section>
     <div>
@@ -311,10 +329,13 @@ export function ServicesManager() {
       <article className="overflow-hidden rounded-2xl border border-[#d8e4d2] bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[#e5ede1] px-5 py-4"><h2 className="font-serif text-2xl">Danh mục dịch vụ</h2><span className="text-xs text-[#71816c]">{services.length} dịch vụ</span></div>
         <div className="divide-y divide-[#edf1ea]">
-          {serviceGroups.map((group) => <details key={group.id} className="group">
+          {serviceGroups.map((group) => <details key={group.id} className="group/catalog">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:hidden">
               <div><p className="font-semibold text-[#34472e]">{group.label}</p><p className="mt-0.5 text-sm text-[#71816c]">{group.description}</p></div>
-              <span className="rounded-full bg-[#edf4e8] px-2.5 py-1 text-xs font-bold text-[#50713c]">{group.services.length} mục</span>
+              <div className="flex shrink-0 items-center gap-2 text-[#50713c]">
+                <span className="rounded-full bg-[#edf4e8] px-2.5 py-1 text-xs font-bold">{group.services.length} mục</span>
+                <ChevronDown className="group-open/catalog:rotate-180" />
+              </div>
             </summary>
             <div className="border-t border-[#edf1ea] bg-[#fbfdf9]">
               {group.services.map((service) => <div key={service.id} className="border-b border-[#edf1ea] px-5 py-3 last:border-b-0">
@@ -342,8 +363,47 @@ export function ServicesManager() {
       <article className="overflow-hidden rounded-2xl border border-[#d8e4d2] bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[#e5ede1] px-5 py-4"><h2 className="font-serif text-2xl">Quy tắc đang lưu</h2><span className="text-xs text-[#71816c]">{rules.length} quy tắc</span></div>
         <div className="divide-y divide-[#edf1ea]">
-          {consultantRules.length > 0 && <details className="group"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:hidden"><div><p className="font-semibold text-[#34472e]">Người bán theo nhân viên</p><p className="mt-0.5 text-sm text-[#71816c]">Tỷ lệ riêng, áp dụng theo người được chọn</p></div><span className="rounded-full bg-[#edf4e8] px-2.5 py-1 text-xs font-bold text-[#50713c]">{consultantRules.length} mục</span></summary><div className="border-t border-[#edf1ea] bg-[#fbfdf9]">{consultantRules.map((item) => <div key={item.id} className="flex items-center justify-between gap-4 border-b border-[#edf1ea] px-5 py-3 last:border-b-0"><div><p className="font-medium">{item.recipient?.display_name ?? "Nhân viên bán hàng"} · {item.rate_type === "percentage" ? `${item.rate_value}% thực thu` : formatVnd(item.rate_value)}</p><p className="text-sm text-[#71816c]">{item.sale_type ? saleTypeLabels[item.sale_type] : "Mọi hình thức"} · từ {item.valid_from}</p></div><div className="flex shrink-0 items-center gap-2"><button onClick={() => editRule(item)} className="rounded-lg px-3 py-2 text-xs font-bold text-[#48643a] hover:bg-[#edf4e8]">Chỉnh sửa</button><button onClick={() => void toggleRule(item)} className={`rounded-lg px-3 py-2 text-xs font-bold ${item.active ? "bg-[#edf4e8] text-[#50713c]" : "bg-[#f2f2f2] text-[#758073]"}`}>{item.active ? "Hủy áp dụng" : "Áp dụng lại"}</button><button onClick={() => void deleteRule(item)} className="rounded-lg px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50">Xóa hẳn</button></div></div>)}</div></details>}
-          {technicianRuleGroups.map((group) => <details key={group.id} className="group"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:hidden"><div><p className="font-semibold text-[#34472e]">KTV · {group.label}</p><p className="mt-0.5 text-sm text-[#71816c]">{group.description}</p></div><span className="rounded-full bg-[#edf4e8] px-2.5 py-1 text-xs font-bold text-[#50713c]">{group.rules.length} quy tắc</span></summary><div className="border-t border-[#edf1ea] bg-[#fbfdf9]">{group.rules.map((item) => <div key={item.id} className="flex items-center justify-between gap-4 border-b border-[#edf1ea] px-5 py-3 last:border-b-0"><div><p className="font-medium">{item.service?.name ?? "Tất cả dịch vụ"}</p><p className="text-sm text-[#71816c]">{item.sale_type ? saleTypeLabels[item.sale_type] : "Mọi hình thức"} · {item.rate_type === "percentage" ? `${item.rate_value}% giá gói` : formatVnd(item.rate_value)} · từ {item.valid_from}</p></div><div className="flex shrink-0 items-center gap-2"><button onClick={() => editRule(item)} className="rounded-lg px-3 py-2 text-xs font-bold text-[#48643a] hover:bg-[#edf4e8]">Chỉnh sửa</button><button onClick={() => void toggleRule(item)} className={`rounded-lg px-3 py-2 text-xs font-bold ${item.active ? "bg-[#edf4e8] text-[#50713c]" : "bg-[#f2f2f2] text-[#758073]"}`}>{item.active ? "Hủy áp dụng" : "Áp dụng lại"}</button><button onClick={() => void deleteRule(item)} className="rounded-lg px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50">Xóa hẳn</button></div></div>)}</div></details>)}
+          {consultantRules.length > 0 && <details className="group/consultant">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:hidden">
+              <div><p className="font-semibold text-[#34472e]">Người bán theo nhân viên</p><p className="mt-0.5 text-sm text-[#71816c]">Tỷ lệ riêng, áp dụng theo người được chọn</p></div>
+              <div className="flex shrink-0 items-center gap-2 text-[#50713c]">
+                <span className="rounded-full bg-[#edf4e8] px-2.5 py-1 text-xs font-bold">{consultantRules.length} mục</span>
+                <ChevronDown className="group-open/consultant:rotate-180" />
+              </div>
+            </summary>
+            <div className="border-t border-[#edf1ea] bg-[#fbfdf9]">
+              {consultantRules.map((item) => <div key={item.id} className="flex flex-col gap-3 border-b border-[#edf1ea] px-5 py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
+                <div><p className="font-medium">{item.recipient?.display_name ?? "Nhân viên bán hàng"} · {item.rate_type === "percentage" ? `${item.rate_value}% thực thu` : formatVnd(item.rate_value)}</p><p className="text-sm text-[#71816c]">{item.sale_type ? saleTypeLabels[item.sale_type] : "Mọi hình thức"} · từ {item.valid_from}</p></div>
+                <div className="flex shrink-0 flex-wrap items-center gap-2"><button type="button" onClick={() => editRule(item)} className="rounded-lg px-3 py-2 text-xs font-bold text-[#48643a] hover:bg-[#edf4e8]">Chỉnh sửa</button><button type="button" onClick={() => void toggleRule(item)} className={`rounded-lg px-3 py-2 text-xs font-bold ${item.active ? "bg-[#edf4e8] text-[#50713c]" : "bg-[#f2f2f2] text-[#758073]"}`}>{item.active ? "Hủy áp dụng" : "Áp dụng lại"}</button><button type="button" onClick={() => void deleteRule(item)} className="rounded-lg px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50">Xóa hẳn</button></div>
+              </div>)}
+            </div>
+          </details>}
+          {technicianRuleGroups.map((group) => <details key={group.id} className="group/rule-category">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:hidden">
+              <div><p className="font-semibold text-[#34472e]">KTV · {group.label}</p><p className="mt-0.5 text-sm text-[#71816c]">{group.description}</p></div>
+              <div className="flex shrink-0 items-center gap-2 text-[#50713c]">
+                <span className="rounded-full bg-[#edf4e8] px-2.5 py-1 text-xs font-bold">{group.ruleCount} quy tắc</span>
+                <ChevronDown className="group-open/rule-category:rotate-180" />
+              </div>
+            </summary>
+            <div className="border-t border-[#edf1ea] bg-[#f7faf5] px-3 py-2">
+              {group.serviceRules.map((serviceGroup) => <details key={serviceGroup.id} className="group/rule-service my-2 overflow-hidden rounded-xl border border-[#dde7d8] bg-white first:mt-0 last:mb-0">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 marker:hidden">
+                  <p className="font-medium text-[#34472e]">{serviceGroup.name}</p>
+                  <div className="flex shrink-0 items-center gap-2 text-[#5c7950]">
+                    <span className="text-xs font-semibold">{serviceGroup.rules.length} quy tắc</span>
+                    <ChevronDown className="h-4 w-4 group-open/rule-service:rotate-180" />
+                  </div>
+                </summary>
+                <div className="divide-y divide-[#edf1ea] border-t border-[#e5ede1] bg-[#fbfdf9]">
+                  {serviceGroup.rules.map((item) => <div key={item.id} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div><p className="text-sm font-medium text-[#40533b]">{item.sale_type ? saleTypeLabels[item.sale_type] : "Mọi hình thức"}</p><p className="mt-0.5 text-sm text-[#71816c]">{item.rate_type === "percentage" ? `${item.rate_value}% giá gói` : formatVnd(item.rate_value)} · từ {item.valid_from}</p></div>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2"><button type="button" onClick={() => editRule(item)} className="rounded-lg px-3 py-2 text-xs font-bold text-[#48643a] hover:bg-[#edf4e8]">Chỉnh sửa</button><button type="button" onClick={() => void toggleRule(item)} className={`rounded-lg px-3 py-2 text-xs font-bold ${item.active ? "bg-[#edf4e8] text-[#50713c]" : "bg-[#f2f2f2] text-[#758073]"}`}>{item.active ? "Hủy áp dụng" : "Áp dụng lại"}</button><button type="button" onClick={() => void deleteRule(item)} className="rounded-lg px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50">Xóa hẳn</button></div>
+                  </div>)}
+                </div>
+              </details>)}
+            </div>
+          </details>)}
           {rules.length === 0 && <p className="px-5 py-5 text-sm text-[#71816c]">Chưa có quy tắc hoa hồng.</p>}
         </div>
       </article>
