@@ -31,6 +31,12 @@ const blankRule = (): RuleForm => ({
 
 type CatalogGroup = "hair" | "body" | "skin" | "night" | "other";
 
+type EditingService = {
+  id: string;
+  name: string;
+  defaultPrice: number;
+};
+
 const catalogGroupMeta: Record<CatalogGroup, { label: string; description: string }> = {
   hair: { label: "Gội đầu & thư giãn", description: "Gội đầu, gội dưỡng sinh và gội thảo dược" },
   body: { label: "Massage & trị liệu", description: "Massage body, vai gáy, giác hơi, ôn ấm và giải bó cơ" },
@@ -55,6 +61,7 @@ export function ServicesManager() {
   const [servicePrice, setServicePrice] = useState(0);
   const [packageSaleRate, setPackageSaleRate] = useState(10);
   const [rule, setRule] = useState<RuleForm>(blankRule);
+  const [editingService, setEditingService] = useState<EditingService | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
@@ -174,6 +181,42 @@ export function ServicesManager() {
     if (!error) await load();
   }
 
+  function editService(service: Service) {
+    setEditingService({
+      id: service.id,
+      name: service.name,
+      defaultPrice: Number(service.default_price),
+    });
+    setMessage("");
+  }
+
+  async function updateService(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingService?.name.trim()) {
+      setMessage("Tên dịch vụ không được để trống.");
+      return;
+    }
+
+    setSaving(true);
+    setMessage("");
+    const { error } = await createClient()
+      .from("services")
+      .update({
+        name: editingService.name.trim(),
+        default_price: editingService.defaultPrice,
+      })
+      .eq("id", editingService.id);
+
+    if (error) {
+      setMessage(`Chưa thể cập nhật dịch vụ: ${error.message}`);
+    } else {
+      setEditingService(null);
+      setMessage("Đã cập nhật tên và giá dịch vụ. Giá mới sẽ áp dụng cho doanh thu tạo sau thời điểm này.");
+      await load();
+    }
+    setSaving(false);
+  }
+
   async function deleteService(service: Service) {
     if (!window.confirm(`Xóa hẳn dịch vụ “${service.name}”? Không thể xóa nếu dịch vụ đã có doanh thu.`)) return;
     const { error } = await createClient().from("services").delete().eq("id", service.id);
@@ -267,7 +310,34 @@ export function ServicesManager() {
     <div className="mt-7 grid gap-5 xl:grid-cols-2">
       <article className="overflow-hidden rounded-2xl border border-[#d8e4d2] bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[#e5ede1] px-5 py-4"><h2 className="font-serif text-2xl">Danh mục dịch vụ</h2><span className="text-xs text-[#71816c]">{services.length} dịch vụ</span></div>
-        <div className="divide-y divide-[#edf1ea]">{serviceGroups.map((group) => <details key={group.id} className="group"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:hidden"><div><p className="font-semibold text-[#34472e]">{group.label}</p><p className="mt-0.5 text-sm text-[#71816c]">{group.description}</p></div><span className="rounded-full bg-[#edf4e8] px-2.5 py-1 text-xs font-bold text-[#50713c]">{group.services.length} mục</span></summary><div className="border-t border-[#edf1ea] bg-[#fbfdf9]">{group.services.map((service) => <div key={service.id} className="flex items-center justify-between gap-4 border-b border-[#edf1ea] px-5 py-3 last:border-b-0"><div><p className="font-medium">{service.name}</p><p className="text-sm text-[#71816c]">Giá mặc định: {formatVnd(service.default_price)}</p></div><div className="flex shrink-0 items-center gap-2"><button onClick={() => void toggleService(service)} className={`rounded-lg px-3 py-2 text-xs font-bold ${service.active ? "bg-[#edf4e8] text-[#50713c]" : "bg-[#f2f2f2] text-[#758073]"}`}>{service.active ? "Ngừng dùng" : "Áp dụng lại"}</button><button onClick={() => void deleteService(service)} className="rounded-lg px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50">Xóa hẳn</button></div></div>)}</div></details>)}{services.length === 0 && <p className="px-5 py-5 text-sm text-[#71816c]">Chưa có dịch vụ.</p>}</div>
+        <div className="divide-y divide-[#edf1ea]">
+          {serviceGroups.map((group) => <details key={group.id} className="group">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:hidden">
+              <div><p className="font-semibold text-[#34472e]">{group.label}</p><p className="mt-0.5 text-sm text-[#71816c]">{group.description}</p></div>
+              <span className="rounded-full bg-[#edf4e8] px-2.5 py-1 text-xs font-bold text-[#50713c]">{group.services.length} mục</span>
+            </summary>
+            <div className="border-t border-[#edf1ea] bg-[#fbfdf9]">
+              {group.services.map((service) => <div key={service.id} className="border-b border-[#edf1ea] px-5 py-3 last:border-b-0">
+                {editingService?.id === service.id ? <form onSubmit={updateService} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_11rem_auto] sm:items-end">
+                  <label className="text-xs font-semibold text-[#40533b]">Tên dịch vụ<input required value={editingService.name} onChange={(event) => setEditingService({ ...editingService, name: event.target.value })} className="field" /></label>
+                  <label className="text-xs font-semibold text-[#40533b]">Giá mặc định<CurrencyInput required value={editingService.defaultPrice} onValueChange={(defaultPrice) => setEditingService({ ...editingService, defaultPrice })} className="field" /></label>
+                  <div className="flex gap-2">
+                    <button disabled={saving} className="rounded-lg bg-[#6f9556] px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Lưu</button>
+                    <button type="button" onClick={() => setEditingService(null)} className="rounded-lg border border-[#cddac6] px-3 py-2 text-xs font-bold text-[#48643a]">Hủy</button>
+                  </div>
+                </form> : <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div><p className="font-medium">{service.name}</p><p className="text-sm text-[#71816c]">Giá mặc định: {formatVnd(service.default_price)}</p></div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <button type="button" onClick={() => editService(service)} className="rounded-lg px-3 py-2 text-xs font-bold text-[#48643a] hover:bg-[#edf4e8]">Chỉnh sửa</button>
+                    <button type="button" onClick={() => void toggleService(service)} className={`rounded-lg px-3 py-2 text-xs font-bold ${service.active ? "bg-[#edf4e8] text-[#50713c]" : "bg-[#f2f2f2] text-[#758073]"}`}>{service.active ? "Ngừng dùng" : "Áp dụng lại"}</button>
+                    <button type="button" onClick={() => void deleteService(service)} className="rounded-lg px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50">Xóa hẳn</button>
+                  </div>
+                </div>}
+              </div>)}
+            </div>
+          </details>)}
+          {services.length === 0 && <p className="px-5 py-5 text-sm text-[#71816c]">Chưa có dịch vụ.</p>}
+        </div>
       </article>
       <article className="overflow-hidden rounded-2xl border border-[#d8e4d2] bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[#e5ede1] px-5 py-4"><h2 className="font-serif text-2xl">Quy tắc đang lưu</h2><span className="text-xs text-[#71816c]">{rules.length} quy tắc</span></div>
